@@ -1,0 +1,64 @@
+{
+  "id": "nrf24l01",
+  "name": "NRF24L01",
+  "category": "communication",
+  "manufacturer": "Nordic",
+  "description": "NRF24L01",
+  "interfaces": [
+    "SPI"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "CE",
+      "type": "GPIO"
+    },
+    {
+      "name": "CSN",
+      "type": "SPI"
+    },
+    {
+      "name": "SCK",
+      "type": "SPI"
+    },
+    {
+      "name": "MOSI",
+      "type": "SPI"
+    },
+    {
+      "name": "MISO",
+      "type": "SPI"
+    }
+  ],
+  "keywords": [
+    "nrf",
+    "radio",
+    "spi",
+    "communication",
+    "wireless"
+  ],
+  "aliases": [
+    "nrf24"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "nrf24l01"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "servo",
+  "name": "Servo Motor",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Servo Motor",
+  "interfaces": [
+    "PWM",
+    "GPIO"
+  ],
+  "voltage": {
+    "min": 4.8,
+    "max": 6
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "SIG",
+      "type": "PWM"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "servo",
+    "motor",
+    "actuator",
+    "pwm"
+  ],
+  "aliases": [
+    "sg90"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "servo"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "relay",
+  "name": "Relay Module",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Single-channel relay",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 80,
+    "height": 100
+  },
+  "pins": [
+    {
+      "id": "vcc",
+      "name": "VCC",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 5,
+      "position": {
+        "x": 15,
+        "y": 5
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 65,
+        "y": 5
+      }
+    },
+    {
+      "id": "in",
+      "name": "IN",
+      "type": "GPIO",
+      "direction": "INPUT",
+      "voltage": 5,
+      "position": {
+        "x": 40,
+        "y": 5
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO"
+  ],
+  "simulation": {
+    "behavior": "relay"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "relay",
+    "switch"
+  ],
+  "aliases": []
+}

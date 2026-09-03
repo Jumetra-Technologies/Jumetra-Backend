@@ -1,0 +1,48 @@
+{
+  "id": "dht11",
+  "name": "DHT11 Temperature Humidity Sensor",
+  "category": "sensor",
+  "manufacturer": "Aosong",
+  "description": "DHT11 Temperature Humidity Sensor",
+  "interfaces": [
+    "GPIO",
+    "Digital"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "DATA",
+      "type": "GPIO"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "temperature",
+    "humidity",
+    "dht",
+    "sensor"
+  ],
+  "aliases": [
+    "dht 11"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "temperature_humidity"
+  }
+}

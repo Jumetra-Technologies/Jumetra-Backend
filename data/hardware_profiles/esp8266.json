@@ -1,0 +1,21 @@
+{
+  "profile_id": "esp8266",
+  "vendor": "Espressif",
+  "manufacturer": "Espressif",
+  "model": "ESP8266 NodeMCU",
+  "category": "microcontroller",
+  "board_type": "esp8266",
+  "label": "ESP8266 NodeMCU",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "wifi"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "wifi"],
+  "pins": [
+    {"pin_id": "D0", "name": "GPIO16", "number": 16, "interfaces": ["gpio"], "voltage_v": 3.3},
+    {"pin_id": "D1", "name": "GPIO5", "number": 5, "interfaces": ["gpio", "i2c"], "voltage_v": 3.3},
+    {"pin_id": "D2", "name": "GPIO4", "number": 4, "interfaces": ["gpio", "i2c"], "voltage_v": 3.3},
+    {"pin_id": "D5", "name": "GPIO14", "number": 14, "interfaces": ["gpio", "spi"], "voltage_v": 3.3},
+    {"pin_id": "A0", "name": "ADC0", "number": 0, "interfaces": ["adc"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "esp", "architectures": ["xtensa"]}
+}

@@ -1,0 +1,20 @@
+{
+  "profile_id": "stm32",
+  "vendor": "STMicroelectronics",
+  "manufacturer": "STMicroelectronics",
+  "model": "STM32 Blue Pill",
+  "category": "microcontroller",
+  "board_type": "stm32",
+  "label": "STM32 Blue Pill",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "can"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "can"],
+  "pins": [
+    {"pin_id": "PA0", "name": "PA0", "number": "PA0", "interfaces": ["gpio", "adc"], "voltage_v": 3.3},
+    {"pin_id": "PA1", "name": "PA1", "number": "PA1", "interfaces": ["gpio", "adc"], "voltage_v": 3.3},
+    {"pin_id": "PB0", "name": "PB0", "number": "PB0", "interfaces": ["gpio", "pwm"], "voltage_v": 3.3},
+    {"pin_id": "PC13", "name": "PC13 (LED)", "number": "PC13", "interfaces": ["gpio"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "arm-cortex-m", "mcu": "STM32F103"}
+}

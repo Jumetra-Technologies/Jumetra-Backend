@@ -1,0 +1,53 @@
+{
+  "id": "mq2",
+  "name": "MQ2 Gas Sensor",
+  "category": "sensor",
+  "manufacturer": "Winsen",
+  "description": "MQ2 Gas Sensor",
+  "interfaces": [
+    "Analog",
+    "ADC",
+    "GPIO"
+  ],
+  "voltage": {
+    "min": 5,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "A0",
+      "type": "ADC"
+    },
+    {
+      "name": "D0",
+      "type": "GPIO"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "gas",
+    "smoke",
+    "mq2",
+    "sensor"
+  ],
+  "aliases": [
+    "mq-2"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "mq2"
+  }
+}

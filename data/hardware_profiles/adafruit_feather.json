@@ -1,0 +1,18 @@
+{
+  "profile_id": "adafruit_feather",
+  "vendor": "Adafruit",
+  "manufacturer": "Adafruit",
+  "model": "Feather M0",
+  "category": "microcontroller",
+  "board_type": "adafruit-feather",
+  "label": "Adafruit Feather",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "pins": [
+    {"pin_id": "D13", "name": "D13", "number": 13, "interfaces": ["gpio"], "voltage_v": 3.3},
+    {"pin_id": "A0", "name": "A0", "number": 14, "interfaces": ["adc"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "samd", "mcu": "SAMD21"}
+}

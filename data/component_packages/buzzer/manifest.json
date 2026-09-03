@@ -1,0 +1,51 @@
+{
+  "id": "buzzer",
+  "name": "Buzzer",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Active/passive buzzer",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 60,
+    "height": 70
+  },
+  "pins": [
+    {
+      "id": "pos",
+      "name": "+",
+      "type": "GPIO",
+      "direction": "INPUT",
+      "voltage": 5,
+      "position": {
+        "x": 20,
+        "y": 65
+      }
+    },
+    {
+      "id": "neg",
+      "name": "-",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 40,
+        "y": 65
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO",
+    "PWM"
+  ],
+  "simulation": {
+    "behavior": "digital_output"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "buzzer",
+    "sound"
+  ],
+  "aliases": []
+}

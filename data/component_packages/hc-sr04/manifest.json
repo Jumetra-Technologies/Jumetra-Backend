@@ -1,0 +1,74 @@
+{
+  "id": "hc-sr04",
+  "name": "HC-SR04 Ultrasonic",
+  "category": "sensor",
+  "manufacturer": "Generic",
+  "description": "Ultrasonic distance sensor",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 120,
+    "height": 70
+  },
+  "pins": [
+    {
+      "id": "vcc",
+      "name": "VCC",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 5,
+      "position": {
+        "x": 20,
+        "y": 65
+      }
+    },
+    {
+      "id": "trig",
+      "name": "TRIG",
+      "type": "GPIO",
+      "direction": "OUTPUT",
+      "voltage": 5,
+      "position": {
+        "x": 45,
+        "y": 65
+      }
+    },
+    {
+      "id": "echo",
+      "name": "ECHO",
+      "type": "GPIO",
+      "direction": "INPUT",
+      "voltage": 5,
+      "position": {
+        "x": 70,
+        "y": 65
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 95,
+        "y": 65
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO"
+  ],
+  "simulation": {
+    "behavior": "ultrasonic"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "ultrasonic",
+    "distance"
+  ],
+  "aliases": [
+    "hcsr04"
+  ]
+}

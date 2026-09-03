@@ -1,0 +1,64 @@
+{
+  "id": "soil-moisture",
+  "name": "Soil Moisture Sensor",
+  "category": "sensor",
+  "manufacturer": "Generic",
+  "description": "Capacitive soil moisture probe",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 90,
+    "height": 120
+  },
+  "pins": [
+    {
+      "id": "vcc",
+      "name": "VCC",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 3.3,
+      "position": {
+        "x": 20,
+        "y": 10
+      }
+    },
+    {
+      "id": "aout",
+      "name": "AOUT",
+      "type": "ADC",
+      "direction": "INPUT",
+      "voltage": 3.3,
+      "position": {
+        "x": 45,
+        "y": 10
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 70,
+        "y": 10
+      }
+    }
+  ],
+  "interfaces": [
+    "ADC"
+  ],
+  "simulation": {
+    "behavior": "analog_sensor"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "soil",
+    "moisture",
+    "agriculture"
+  ],
+  "aliases": [
+    "soil"
+  ]
+}

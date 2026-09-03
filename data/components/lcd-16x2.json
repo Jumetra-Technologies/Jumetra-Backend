@@ -1,0 +1,53 @@
+{
+  "id": "lcd-16x2",
+  "name": "LCD 16x2",
+  "category": "display",
+  "manufacturer": "Hitachi",
+  "description": "LCD 16x2",
+  "interfaces": [
+    "I2C",
+    "GPIO"
+  ],
+  "voltage": {
+    "min": 5,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
+    }
+  ],
+  "keywords": [
+    "lcd",
+    "display",
+    "16x2",
+    "i2c"
+  ],
+  "aliases": [
+    "lcd",
+    "hd44780"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "lcd"
+  }
+}

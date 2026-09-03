@@ -1,0 +1,18 @@
+{
+  "profile_id": "particle_photon",
+  "vendor": "Particle",
+  "manufacturer": "Particle",
+  "model": "Photon",
+  "category": "microcontroller",
+  "board_type": "particle-photon",
+  "label": "Particle Photon",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "wifi"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "wifi"],
+  "pins": [
+    {"pin_id": "D0", "name": "D0", "number": 0, "interfaces": ["gpio", "i2c"], "voltage_v": 3.3},
+    {"pin_id": "A0", "name": "A0", "number": 10, "interfaces": ["adc"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "stm32", "mcu": "STM32F205"}
+}

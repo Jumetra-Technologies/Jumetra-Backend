@@ -1,0 +1,17 @@
+{
+  "profile_id": "teensy",
+  "vendor": "PJRC",
+  "manufacturer": "PJRC",
+  "model": "Teensy 4.1",
+  "category": "microcontroller",
+  "board_type": "teensy",
+  "label": "Teensy 4.1",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "dac", "i2c", "spi", "uart", "can"],
+  "capabilities": ["gpio", "pwm", "adc", "dac", "i2c", "spi", "uart"],
+  "pins": [
+    {"pin_id": "D13", "name": "D13", "number": 13, "interfaces": ["gpio", "pwm"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "nxp", "mcu": "iMXRT1062"}
+}

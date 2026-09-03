@@ -1,0 +1,63 @@
+{
+  "id": "servo",
+  "name": "Servo Motor",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Hobby servo",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 90,
+    "height": 110
+  },
+  "pins": [
+    {
+      "id": "vcc",
+      "name": "VCC",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 5,
+      "position": {
+        "x": 20,
+        "y": 100
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 45,
+        "y": 100
+      }
+    },
+    {
+      "id": "sig",
+      "name": "SIG",
+      "type": "PWM",
+      "direction": "INPUT",
+      "voltage": 5,
+      "position": {
+        "x": 70,
+        "y": 100
+      }
+    }
+  ],
+  "interfaces": [
+    "PWM"
+  ],
+  "simulation": {
+    "behavior": "servo_motor"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "servo",
+    "motor"
+  ],
+  "aliases": [
+    "sg90"
+  ]
+}

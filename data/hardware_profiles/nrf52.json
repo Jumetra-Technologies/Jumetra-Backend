@@ -1,0 +1,17 @@
+{
+  "profile_id": "nrf52",
+  "vendor": "Nordic",
+  "manufacturer": "Nordic Semiconductor",
+  "model": "nRF52840 DK",
+  "category": "microcontroller",
+  "board_type": "nrf52",
+  "label": "nRF52",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "bluetooth"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart", "bluetooth"],
+  "pins": [
+    {"pin_id": "P0.13", "name": "P0.13", "number": 13, "interfaces": ["gpio"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "nrf", "mcu": "nRF52840"}
+}

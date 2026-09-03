@@ -1,0 +1,57 @@
+{
+  "id": "stm32",
+  "name": "STM32 Blue Pill",
+  "category": "mcu",
+  "manufacturer": "STMicroelectronics",
+  "description": "STM32 Blue Pill",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "ADC"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "PA0",
+      "type": "GPIO"
+    },
+    {
+      "name": "PB6",
+      "type": "I2C"
+    },
+    {
+      "name": "PB7",
+      "type": "I2C"
+    },
+    {
+      "name": "3V3",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "stm32",
+    "blue pill",
+    "mcu"
+  ],
+  "aliases": [
+    "bluepill",
+    "blue pill"
+  ],
+  "compatible_controllers": [
+    "stm32"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "stm32"
+  }
+}

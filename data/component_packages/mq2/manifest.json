@@ -1,0 +1,65 @@
+{
+  "id": "mq2",
+  "name": "MQ2 Gas Sensor",
+  "category": "sensor",
+  "manufacturer": "Winsen",
+  "description": "Combustible gas sensor",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 100,
+    "height": 90
+  },
+  "pins": [
+    {
+      "id": "vcc",
+      "name": "VCC",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 5,
+      "position": {
+        "x": 20,
+        "y": 85
+      }
+    },
+    {
+      "id": "aout",
+      "name": "AOUT",
+      "type": "ADC",
+      "direction": "INPUT",
+      "voltage": 5,
+      "position": {
+        "x": 50,
+        "y": 85
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 80,
+        "y": 85
+      }
+    }
+  ],
+  "interfaces": [
+    "ADC",
+    "GPIO"
+  ],
+  "simulation": {
+    "behavior": "analog_sensor"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "gas",
+    "smoke",
+    "mq2"
+  ],
+  "aliases": [
+    "mq-2"
+  ]
+}

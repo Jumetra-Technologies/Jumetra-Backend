@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+  <rect x="4" y="4" width="312" height="172" rx="8" fill="#00789D" stroke="#64748B" stroke-width="2"/>
+  <text x="160.0" y="94.0" text-anchor="middle" fill="#E2E8F0" font-family="monospace" font-size="12">Arduino Mega</text>
+</svg>

@@ -1,0 +1,75 @@
+{
+  "id": "rgb-led",
+  "name": "RGB LED",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Common-cathode RGB LED",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 70,
+    "height": 80
+  },
+  "pins": [
+    {
+      "id": "r",
+      "name": "R",
+      "type": "PWM",
+      "direction": "INPUT",
+      "voltage": 3.3,
+      "position": {
+        "x": 15,
+        "y": 5
+      }
+    },
+    {
+      "id": "g",
+      "name": "G",
+      "type": "PWM",
+      "direction": "INPUT",
+      "voltage": 3.3,
+      "position": {
+        "x": 35,
+        "y": 5
+      }
+    },
+    {
+      "id": "b",
+      "name": "B",
+      "type": "PWM",
+      "direction": "INPUT",
+      "voltage": 3.3,
+      "position": {
+        "x": 55,
+        "y": 5
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 35,
+        "y": 75
+      }
+    }
+  ],
+  "interfaces": [
+    "PWM",
+    "GPIO"
+  ],
+  "simulation": {
+    "behavior": "digital_output"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "rgb",
+    "led"
+  ],
+  "aliases": [
+    "rgb"
+  ]
+}

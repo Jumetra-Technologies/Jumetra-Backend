@@ -1,0 +1,66 @@
+{
+  "id": "arduino-uno",
+  "name": "Arduino Uno",
+  "category": "mcu",
+  "manufacturer": "Arduino",
+  "description": "Arduino Uno",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "ADC"
+  ],
+  "voltage": {
+    "min": 5,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "D13",
+      "type": "GPIO"
+    },
+    {
+      "name": "D2",
+      "type": "GPIO"
+    },
+    {
+      "name": "A0",
+      "type": "ADC"
+    },
+    {
+      "name": "5V",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
+    }
+  ],
+  "keywords": [
+    "arduino",
+    "uno",
+    "mcu",
+    "microcontroller"
+  ],
+  "aliases": [
+    "uno",
+    "arduino uno"
+  ],
+  "compatible_controllers": [
+    "arduino-uno"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "arduino_uno"
+  }
+}

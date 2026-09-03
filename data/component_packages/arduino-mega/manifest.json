@@ -1,0 +1,77 @@
+{
+  "id": "arduino-mega",
+  "name": "Arduino Mega",
+  "category": "mcu",
+  "manufacturer": "Arduino",
+  "description": "ATmega2560 board",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 320,
+    "height": 180
+  },
+  "pins": [
+    {
+      "id": "5v",
+      "name": "5V",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 5,
+      "position": {
+        "x": 10,
+        "y": 30
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 10,
+        "y": 60
+      }
+    },
+    {
+      "id": "d2",
+      "name": "D2",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 5,
+      "position": {
+        "x": 310,
+        "y": 40
+      }
+    },
+    {
+      "id": "d13",
+      "name": "D13",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 5,
+      "position": {
+        "x": 310,
+        "y": 80
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO",
+    "UART",
+    "I2C",
+    "SPI"
+  ],
+  "simulation": {
+    "behavior": "mcu"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "arduino",
+    "mega"
+  ],
+  "aliases": [
+    "mega"
+  ]
+}

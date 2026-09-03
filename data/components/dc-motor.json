@@ -1,0 +1,51 @@
+{
+  "id": "dc-motor",
+  "name": "DC Motor",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "DC Motor",
+  "interfaces": [
+    "GPIO",
+    "PWM"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 12
+  },
+  "pins": [
+    {
+      "name": "IN1",
+      "type": "GPIO"
+    },
+    {
+      "name": "IN2",
+      "type": "GPIO"
+    },
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "motor",
+    "dc",
+    "actuator"
+  ],
+  "aliases": [
+    "dcmotor"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "dc_motor"
+  }
+}

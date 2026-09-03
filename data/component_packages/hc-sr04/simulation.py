@@ -1,0 +1,2 @@
+# Behavior: ultrasonic
+BEHAVIOR = "ultrasonic"

@@ -1,0 +1,55 @@
+{
+  "id": "esp8266",
+  "name": "ESP8266 NodeMCU",
+  "category": "mcu",
+  "manufacturer": "Espressif",
+  "description": "ESP8266 NodeMCU",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "ADC",
+    "WiFi"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "D1",
+      "type": "GPIO"
+    },
+    {
+      "name": "D2",
+      "type": "GPIO"
+    },
+    {
+      "name": "3V3",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "esp",
+    "esp8266",
+    "wifi",
+    "mcu"
+  ],
+  "aliases": [
+    "nodemcu"
+  ],
+  "compatible_controllers": [
+    "esp8266",
+    "esp32"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "esp8266"
+  }
+}

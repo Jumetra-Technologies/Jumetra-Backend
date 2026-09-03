@@ -1,0 +1,5 @@
+{
+  "board": "raspberry-pi-pico",
+  "fqbn": "",
+  "upload_protocol": "serial"
+}

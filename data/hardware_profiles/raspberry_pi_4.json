@@ -1,0 +1,22 @@
+{
+  "profile_id": "raspberry_pi_4",
+  "vendor": "Raspberry Pi Foundation",
+  "manufacturer": "Raspberry Pi Foundation",
+  "model": "Raspberry Pi 4 Model B",
+  "category": "single-board-computer",
+  "board_type": "raspberry-pi-4",
+  "label": "Raspberry Pi 4",
+  "default_transport": "ssh",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "i2c", "spi", "uart", "wifi", "bluetooth", "ssh", "mqtt"],
+  "capabilities": ["gpio", "pwm", "i2c", "spi", "uart", "camera", "wifi", "bluetooth", "ssh", "mqtt"],
+  "pins": [
+    {"pin_id": "GPIO17", "name": "GPIO17", "number": 17, "interfaces": ["gpio"], "voltage_v": 3.3},
+    {"pin_id": "GPIO18", "name": "GPIO18", "number": 18, "interfaces": ["gpio", "pwm"], "voltage_v": 3.3},
+    {"pin_id": "GPIO22", "name": "GPIO22", "number": 22, "interfaces": ["gpio"], "voltage_v": 3.3},
+    {"pin_id": "GPIO23", "name": "GPIO23", "number": 23, "interfaces": ["gpio"], "voltage_v": 3.3},
+    {"pin_id": "GPIO24", "name": "GPIO24", "number": 24, "interfaces": ["gpio"], "voltage_v": 3.3},
+    {"pin_id": "GPIO27", "name": "GPIO27", "number": 27, "interfaces": ["gpio"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "raspberry-pi", "os": "linux", "architectures": ["arm64"]}
+}

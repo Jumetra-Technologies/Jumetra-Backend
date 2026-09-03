@@ -1,0 +1,53 @@
+{
+  "id": "oled-ssd1306",
+  "name": "OLED SSD1306",
+  "category": "display",
+  "manufacturer": "Solomon",
+  "description": "OLED SSD1306",
+  "interfaces": [
+    "I2C",
+    "SPI"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
+    }
+  ],
+  "keywords": [
+    "oled",
+    "display",
+    "ssd1306",
+    "i2c"
+  ],
+  "aliases": [
+    "ssd1306",
+    "oled"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "oled"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "ds18b20",
+  "name": "DS18B20 Temperature",
+  "category": "sensor",
+  "manufacturer": "Maxim",
+  "description": "DS18B20 Temperature",
+  "interfaces": [
+    "GPIO",
+    "OneWire"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "DQ",
+      "type": "GPIO"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "temperature",
+    "onewire",
+    "sensor",
+    "ds18b20"
+  ],
+  "aliases": [
+    "ds18b20"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "ds18b20"
+  }
+}

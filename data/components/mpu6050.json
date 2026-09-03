@@ -1,0 +1,52 @@
+{
+  "id": "mpu6050",
+  "name": "MPU6050 IMU",
+  "category": "sensor",
+  "manufacturer": "InvenSense",
+  "description": "MPU6050 IMU",
+  "interfaces": [
+    "I2C"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
+    }
+  ],
+  "keywords": [
+    "imu",
+    "gyro",
+    "accelerometer",
+    "sensor",
+    "i2c"
+  ],
+  "aliases": [
+    "mpu 6050"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "mpu6050"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "raspberry-pi-pico",
+  "name": "Raspberry Pi Pico",
+  "category": "mcu",
+  "manufacturer": "Raspberry Pi",
+  "description": "Raspberry Pi Pico",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "ADC"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "GP0",
+      "type": "GPIO"
+    },
+    {
+      "name": "GP4",
+      "type": "I2C"
+    },
+    {
+      "name": "GP5",
+      "type": "I2C"
+    },
+    {
+      "name": "3V3",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "pico",
+    "raspberry",
+    "rp2040",
+    "mcu"
+  ],
+  "aliases": [
+    "pico"
+  ],
+  "compatible_controllers": [
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "raspberry_pi_pico"
+  }
+}

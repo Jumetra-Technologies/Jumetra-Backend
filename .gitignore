@@ -1,0 +1,42 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Frontend is published in its own repository
+dashboard/
+
+# Local environment and database files
+.env*
+*.db
+
+# Generated firmware and workspace project data
+data/firmware/
+data/projects/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Runtime storage (keep directory placeholders)
+data/events/*
+data/metrics/*
+data/snapshots/*
+data/experiments/*
+data/laboratory/*
+data/hybrid/*
+data/lab_workspace/*
+data/platform.db
+!data/**/.gitkeep
+!data/experiments/.gitkeep
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

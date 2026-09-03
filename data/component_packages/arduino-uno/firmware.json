@@ -1,0 +1,5 @@
+{
+  "board": "arduino-uno",
+  "fqbn": "",
+  "upload_protocol": "serial"
+}

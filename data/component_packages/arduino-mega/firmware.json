@@ -1,0 +1,5 @@
+{
+  "board": "arduino-mega",
+  "fqbn": "",
+  "upload_protocol": "serial"
+}

@@ -1,0 +1,52 @@
+{
+  "id": "hc-05",
+  "name": "Bluetooth HC-05",
+  "category": "communication",
+  "manufacturer": "Generic",
+  "description": "Bluetooth HC-05",
+  "interfaces": [
+    "UART",
+    "Bluetooth"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "TX",
+      "type": "UART"
+    },
+    {
+      "name": "RX",
+      "type": "UART"
+    }
+  ],
+  "keywords": [
+    "bluetooth",
+    "uart",
+    "hc05",
+    "communication"
+  ],
+  "aliases": [
+    "hc05"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "hc_05"
+  }
+}

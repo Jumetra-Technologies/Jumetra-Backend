@@ -1,0 +1,139 @@
+{
+  "id": "esp32",
+  "name": "ESP32 DevKit",
+  "category": "mcu",
+  "manufacturer": "Espressif",
+  "description": "Dual-core WiFi/BT MCU",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 300,
+    "height": 150
+  },
+  "pins": [
+    {
+      "id": "3v3",
+      "name": "3V3",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 3.3,
+      "position": {
+        "x": 10,
+        "y": 20
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 10,
+        "y": 130
+      }
+    },
+    {
+      "id": "d2",
+      "name": "GPIO2",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 290,
+        "y": 40
+      }
+    },
+    {
+      "id": "d4",
+      "name": "GPIO4",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 290,
+        "y": 70
+      }
+    },
+    {
+      "id": "d5",
+      "name": "GPIO5",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 290,
+        "y": 100
+      }
+    },
+    {
+      "id": "sda",
+      "name": "SDA",
+      "type": "I2C_SDA",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 200,
+        "y": 140
+      }
+    },
+    {
+      "id": "scl",
+      "name": "SCL",
+      "type": "I2C_SCL",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 230,
+        "y": 140
+      }
+    },
+    {
+      "id": "tx",
+      "name": "TX",
+      "type": "UART_TX",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 150,
+        "y": 140
+      }
+    },
+    {
+      "id": "rx",
+      "name": "RX",
+      "type": "UART_RX",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 170,
+        "y": 140
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "WiFi"
+  ],
+  "simulation": {
+    "behavior": "mcu"
+  },
+  "hardware": {
+    "physical_supported": true,
+    "transports": [
+      "serial"
+    ]
+  },
+  "keywords": [
+    "esp",
+    "esp32",
+    "wifi",
+    "mcu"
+  ],
+  "aliases": [
+    "esp 32"
+  ]
+}

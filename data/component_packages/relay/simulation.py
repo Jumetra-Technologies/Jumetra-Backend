@@ -1,0 +1,2 @@
+# Behavior: relay
+BEHAVIOR = "relay"

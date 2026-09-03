@@ -1,0 +1,2 @@
+# Behavior: mcu
+BEHAVIOR = "mcu"

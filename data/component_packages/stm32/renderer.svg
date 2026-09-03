@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="120" viewBox="0 0 220 120">
+  <rect x="4" y="4" width="212" height="112" rx="8" fill="#2563EB" stroke="#64748B" stroke-width="2"/>
+  <text x="110.0" y="64.0" text-anchor="middle" fill="#E2E8F0" font-family="monospace" font-size="12">STM32 Blue Pill</text>
+</svg>

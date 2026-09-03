@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="200" viewBox="0 0 280 200">
+  <rect x="4" y="4" width="272" height="192" rx="8" fill="#00789D" stroke="#64748B" stroke-width="2"/>
+  <text x="140.0" y="104.0" text-anchor="middle" fill="#E2E8F0" font-family="monospace" font-size="12">Arduino Uno</text>
+</svg>

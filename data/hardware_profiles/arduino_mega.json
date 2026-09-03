@@ -1,0 +1,18 @@
+{
+  "profile_id": "arduino_mega",
+  "vendor": "Arduino",
+  "manufacturer": "Arduino",
+  "model": "Arduino Mega 2560",
+  "category": "microcontroller",
+  "board_type": "arduino-mega",
+  "label": "Arduino Mega",
+  "default_transport": "serial",
+  "voltage_v": 5.0,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "pins": [
+    {"pin_id": "D13", "name": "D13", "number": 13, "interfaces": ["gpio", "pwm"], "voltage_v": 5.0},
+    {"pin_id": "A0", "name": "A0", "number": 54, "interfaces": ["adc"], "voltage_v": 5.0}
+  ],
+  "metadata": {"family": "avr", "mcu": "ATmega2560"}
+}

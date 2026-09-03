@@ -1,0 +1,49 @@
+{
+  "id": "am2302",
+  "name": "AM2302 Temperature Humidity Sensor",
+  "category": "sensor",
+  "manufacturer": "Aosong",
+  "description": "AM2302 Temperature Humidity Sensor",
+  "interfaces": [
+    "GPIO",
+    "Digital"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "DATA",
+      "type": "GPIO"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "temperature",
+    "humidity",
+    "dht",
+    "am2302",
+    "sensor"
+  ],
+  "aliases": [
+    "dht22"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "temperature_humidity"
+  }
+}

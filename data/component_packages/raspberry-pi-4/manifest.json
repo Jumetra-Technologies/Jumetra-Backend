@@ -1,0 +1,82 @@
+{
+  "id": "raspberry-pi-4",
+  "name": "Raspberry Pi 4",
+  "category": "mcu",
+  "manufacturer": "Raspberry Pi",
+  "description": "Linux SBC with WiFi",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 280,
+    "height": 160
+  },
+  "pins": [
+    {
+      "id": "5v",
+      "name": "5V",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 5,
+      "position": {
+        "x": 10,
+        "y": 20
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 10,
+        "y": 50
+      }
+    },
+    {
+      "id": "gpio2",
+      "name": "GPIO2",
+      "type": "I2C_SDA",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 10,
+        "y": 90
+      }
+    },
+    {
+      "id": "gpio3",
+      "name": "GPIO3",
+      "type": "I2C_SCL",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 10,
+        "y": 120
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO",
+    "I2C",
+    "SPI",
+    "UART",
+    "WiFi"
+  ],
+  "simulation": {
+    "behavior": "mcu"
+  },
+  "hardware": {
+    "physical_supported": true,
+    "transports": [
+      "ssh"
+    ]
+  },
+  "keywords": [
+    "raspberry",
+    "pi",
+    "wifi"
+  ],
+  "aliases": [
+    "rpi4"
+  ]
+}

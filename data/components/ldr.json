@@ -1,0 +1,48 @@
+{
+  "id": "ldr",
+  "name": "LDR Light Sensor",
+  "category": "sensor",
+  "manufacturer": "Generic",
+  "description": "LDR Light Sensor",
+  "interfaces": [
+    "Analog",
+    "ADC"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "SIG",
+      "type": "ADC"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "light",
+    "ldr",
+    "photoresistor",
+    "sensor"
+  ],
+  "aliases": [
+    "photoresistor"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "ldr"
+  }
+}

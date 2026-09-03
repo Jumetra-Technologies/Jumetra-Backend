@@ -1,0 +1,21 @@
+{
+  "profile_id": "arduino_uno",
+  "vendor": "Arduino",
+  "manufacturer": "Arduino",
+  "model": "Arduino Uno R3",
+  "category": "microcontroller",
+  "board_type": "arduino-uno",
+  "label": "Arduino Uno R3",
+  "default_transport": "serial",
+  "voltage_v": 5.0,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "pins": [
+    {"pin_id": "D2", "name": "Digital 2", "number": 2, "interfaces": ["gpio"], "voltage_v": 5.0},
+    {"pin_id": "D3", "name": "Digital 3", "number": 3, "interfaces": ["gpio", "pwm"], "voltage_v": 5.0},
+    {"pin_id": "D13", "name": "LED", "number": 13, "interfaces": ["gpio"], "voltage_v": 5.0},
+    {"pin_id": "A0", "name": "Analog 0", "number": "A0", "interfaces": ["adc"], "signal": "input", "voltage_v": 5.0},
+    {"pin_id": "A1", "name": "Analog 1", "number": "A1", "interfaces": ["adc"], "signal": "input", "voltage_v": 5.0}
+  ],
+  "metadata": {"family": "avr", "mcu": "ATmega328P"}
+}

@@ -1,0 +1,22 @@
+{
+  "profile_id": "esp32",
+  "vendor": "Espressif",
+  "manufacturer": "Espressif",
+  "model": "ESP32 DevKit V1",
+  "category": "microcontroller",
+  "board_type": "esp32",
+  "label": "ESP32 DevKit V1",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "dac", "i2c", "spi", "uart", "wifi", "bluetooth"],
+  "capabilities": ["gpio", "pwm", "adc", "dac", "i2c", "spi", "uart", "wifi", "bluetooth"],
+  "pins": [
+    {"pin_id": "D2", "name": "GPIO2", "number": 2, "interfaces": ["gpio", "pwm"], "voltage_v": 3.3},
+    {"pin_id": "D4", "name": "GPIO4", "number": 4, "interfaces": ["gpio", "pwm"], "voltage_v": 3.3},
+    {"pin_id": "D13", "name": "GPIO13", "number": 13, "interfaces": ["gpio", "pwm", "spi"], "voltage_v": 3.3},
+    {"pin_id": "D25", "name": "GPIO25", "number": 25, "interfaces": ["gpio", "pwm", "dac"], "voltage_v": 3.3},
+    {"pin_id": "D26", "name": "GPIO26", "number": 26, "interfaces": ["gpio", "pwm", "dac"], "voltage_v": 3.3},
+    {"pin_id": "D27", "name": "GPIO27", "number": 27, "interfaces": ["gpio", "pwm"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "esp", "architectures": ["xtensa"]}
+}

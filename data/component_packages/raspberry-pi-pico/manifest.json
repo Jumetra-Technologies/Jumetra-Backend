@@ -1,0 +1,78 @@
+{
+  "id": "raspberry-pi-pico",
+  "name": "Raspberry Pi Pico",
+  "category": "mcu",
+  "manufacturer": "Raspberry Pi",
+  "description": "RP2040 board",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 260,
+    "height": 110
+  },
+  "pins": [
+    {
+      "id": "gp0",
+      "name": "GP0",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 10,
+        "y": 30
+      }
+    },
+    {
+      "id": "gp1",
+      "name": "GP1",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 10,
+        "y": 55
+      }
+    },
+    {
+      "id": "3v3",
+      "name": "3V3",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 3.3,
+      "position": {
+        "x": 130,
+        "y": 100
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 10,
+        "y": 90
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI"
+  ],
+  "simulation": {
+    "behavior": "mcu"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "pico",
+    "rp2040"
+  ],
+  "aliases": [
+    "pico"
+  ]
+}

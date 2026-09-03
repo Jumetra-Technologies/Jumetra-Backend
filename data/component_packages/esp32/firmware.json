@@ -1,0 +1,5 @@
+{
+  "board": "esp32",
+  "fqbn": "",
+  "upload_protocol": "serial"
+}

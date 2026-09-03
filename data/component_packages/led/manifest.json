@@ -1,0 +1,51 @@
+{
+  "id": "led",
+  "name": "LED",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Discrete LED indicator",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 60,
+    "height": 80
+  },
+  "pins": [
+    {
+      "id": "a",
+      "name": "Anode",
+      "type": "GPIO",
+      "direction": "INPUT",
+      "voltage": 3.3,
+      "position": {
+        "x": 30,
+        "y": 5
+      }
+    },
+    {
+      "id": "c",
+      "name": "Cathode",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 30,
+        "y": 75
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO",
+    "PWM"
+  ],
+  "simulation": {
+    "behavior": "digital_output"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "led",
+    "light"
+  ],
+  "aliases": []
+}

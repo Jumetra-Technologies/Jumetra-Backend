@@ -1,0 +1,58 @@
+{
+  "id": "stepper-motor",
+  "name": "Stepper Motor",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Stepper Motor",
+  "interfaces": [
+    "GPIO"
+  ],
+  "voltage": {
+    "min": 5,
+    "max": 12
+  },
+  "pins": [
+    {
+      "name": "IN1",
+      "type": "GPIO"
+    },
+    {
+      "name": "IN2",
+      "type": "GPIO"
+    },
+    {
+      "name": "IN3",
+      "type": "GPIO"
+    },
+    {
+      "name": "IN4",
+      "type": "GPIO"
+    },
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "motor",
+    "stepper",
+    "actuator"
+  ],
+  "aliases": [
+    "stepper"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "stepper"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "hc-sr04",
+  "name": "HC-SR04 Ultrasonic",
+  "category": "sensor",
+  "manufacturer": "Generic",
+  "description": "HC-SR04 Ultrasonic",
+  "interfaces": [
+    "GPIO",
+    "Digital"
+  ],
+  "voltage": {
+    "min": 5,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "TRIG",
+      "type": "GPIO"
+    },
+    {
+      "name": "ECHO",
+      "type": "GPIO"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "ultrasonic",
+    "distance",
+    "sensor"
+  ],
+  "aliases": [
+    "hcsr04"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "hc_sr04"
+  }
+}

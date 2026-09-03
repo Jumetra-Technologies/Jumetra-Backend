@@ -1,0 +1,44 @@
+{
+  "id": "led",
+  "name": "LED",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "LED",
+  "interfaces": [
+    "GPIO",
+    "Digital",
+    "PWM"
+  ],
+  "voltage": {
+    "min": 1.8,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "ANODE",
+      "type": "GPIO"
+    },
+    {
+      "name": "CATHODE",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "led",
+    "light",
+    "actuator"
+  ],
+  "aliases": [
+    "diode led"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "led"
+  }
+}

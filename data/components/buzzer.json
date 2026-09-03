@@ -1,0 +1,43 @@
+{
+  "id": "buzzer",
+  "name": "Buzzer",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Buzzer",
+  "interfaces": [
+    "GPIO",
+    "PWM"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "SIG",
+      "type": "GPIO"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "buzzer",
+    "sound",
+    "actuator"
+  ],
+  "aliases": [
+    "beeper"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "buzzer"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "soil-moisture",
+  "name": "Soil Moisture Sensor",
+  "category": "sensor",
+  "manufacturer": "Generic",
+  "description": "Soil Moisture Sensor",
+  "interfaces": [
+    "Analog",
+    "ADC",
+    "GPIO"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "A0",
+      "type": "ADC"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "soil",
+    "moisture",
+    "sensor"
+  ],
+  "aliases": [
+    "soil"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "soil_moisture"
+  }
+}

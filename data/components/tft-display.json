@@ -1,0 +1,59 @@
+{
+  "id": "tft-display",
+  "name": "TFT Display",
+  "category": "display",
+  "manufacturer": "Generic",
+  "description": "TFT Display",
+  "interfaces": [
+    "SPI"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "CS",
+      "type": "SPI"
+    },
+    {
+      "name": "MOSI",
+      "type": "SPI"
+    },
+    {
+      "name": "SCK",
+      "type": "SPI"
+    },
+    {
+      "name": "DC",
+      "type": "GPIO"
+    }
+  ],
+  "keywords": [
+    "tft",
+    "display",
+    "lcd",
+    "spi"
+  ],
+  "aliases": [
+    "ili9341"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "tft"
+  }
+}

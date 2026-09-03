@@ -1,0 +1,77 @@
+{
+  "id": "stm32",
+  "name": "STM32 Blue Pill",
+  "category": "mcu",
+  "manufacturer": "STMicroelectronics",
+  "description": "STM32F103C8T6",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 220,
+    "height": 120
+  },
+  "pins": [
+    {
+      "id": "3v3",
+      "name": "3V3",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 3.3,
+      "position": {
+        "x": 10,
+        "y": 20
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 10,
+        "y": 100
+      }
+    },
+    {
+      "id": "b11",
+      "name": "PB11",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 210,
+        "y": 40
+      }
+    },
+    {
+      "id": "a5",
+      "name": "PA5",
+      "type": "SPI_CLK",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 210,
+        "y": 80
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO",
+    "UART",
+    "I2C",
+    "SPI"
+  ],
+  "simulation": {
+    "behavior": "mcu"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "stm32",
+    "bluepill"
+  ],
+  "aliases": [
+    "blue pill"
+  ]
+}

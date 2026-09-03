@@ -1,0 +1,47 @@
+{
+  "id": "pir",
+  "name": "PIR Motion Sensor",
+  "category": "sensor",
+  "manufacturer": "Generic",
+  "description": "PIR Motion Sensor",
+  "interfaces": [
+    "GPIO",
+    "Digital"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "OUT",
+      "type": "GPIO"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "motion",
+    "pir",
+    "sensor"
+  ],
+  "aliases": [
+    "motion"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "pir"
+  }
+}

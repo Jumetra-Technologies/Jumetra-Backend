@@ -1,0 +1,66 @@
+{
+  "id": "dht22",
+  "name": "DHT22 Temperature Humidity Sensor",
+  "category": "sensor",
+  "manufacturer": "Aosong",
+  "description": "Digital temperature and humidity sensor",
+  "visual": {
+    "renderer": "renderer.svg",
+    "width": 140,
+    "height": 100
+  },
+  "pins": [
+    {
+      "id": "vcc",
+      "name": "VCC",
+      "type": "POWER",
+      "direction": "POWER",
+      "voltage": 3.3,
+      "position": {
+        "x": 40,
+        "y": 0
+      }
+    },
+    {
+      "id": "data",
+      "name": "DATA",
+      "type": "GPIO",
+      "direction": "BIDIRECTIONAL",
+      "voltage": 3.3,
+      "position": {
+        "x": 140,
+        "y": 50
+      }
+    },
+    {
+      "id": "gnd",
+      "name": "GND",
+      "type": "GROUND",
+      "direction": "GROUND",
+      "voltage": 0,
+      "position": {
+        "x": 40,
+        "y": 100
+      }
+    }
+  ],
+  "interfaces": [
+    "GPIO"
+  ],
+  "simulation": {
+    "behavior": "temperature_sensor"
+  },
+  "hardware": {
+    "physical_supported": true
+  },
+  "keywords": [
+    "temperature",
+    "humidity",
+    "dht",
+    "sensor"
+  ],
+  "aliases": [
+    "am2302",
+    "dht 22"
+  ]
+}

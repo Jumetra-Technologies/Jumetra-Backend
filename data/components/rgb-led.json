@@ -1,0 +1,52 @@
+{
+  "id": "rgb-led",
+  "name": "RGB LED",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "RGB LED",
+  "interfaces": [
+    "GPIO",
+    "PWM"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "R",
+      "type": "PWM"
+    },
+    {
+      "name": "G",
+      "type": "PWM"
+    },
+    {
+      "name": "B",
+      "type": "PWM"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "led",
+    "rgb",
+    "actuator",
+    "pwm"
+  ],
+  "aliases": [
+    "rgb"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "rgb_led"
+  }
+}

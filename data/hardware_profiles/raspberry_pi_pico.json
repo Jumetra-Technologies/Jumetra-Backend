@@ -1,0 +1,21 @@
+{
+  "profile_id": "raspberry_pi_pico",
+  "vendor": "Raspberry Pi Foundation",
+  "manufacturer": "Raspberry Pi Foundation",
+  "model": "Raspberry Pi Pico",
+  "category": "microcontroller",
+  "board_type": "raspberry-pi-pico",
+  "label": "Raspberry Pi Pico",
+  "default_transport": "serial",
+  "voltage_v": 3.3,
+  "interfaces": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "capabilities": ["gpio", "pwm", "adc", "i2c", "spi", "uart"],
+  "pins": [
+    {"pin_id": "GP0", "name": "GP0", "number": 0, "interfaces": ["gpio", "uart"], "voltage_v": 3.3},
+    {"pin_id": "GP1", "name": "GP1", "number": 1, "interfaces": ["gpio", "uart"], "voltage_v": 3.3},
+    {"pin_id": "GP15", "name": "GP15", "number": 15, "interfaces": ["gpio", "pwm"], "voltage_v": 3.3},
+    {"pin_id": "GP25", "name": "GP25 (LED)", "number": 25, "interfaces": ["gpio"], "voltage_v": 3.3},
+    {"pin_id": "GP26", "name": "GP26", "number": 26, "interfaces": ["gpio", "adc"], "voltage_v": 3.3}
+  ],
+  "metadata": {"family": "rp2040", "mcu": "RP2040"}
+}

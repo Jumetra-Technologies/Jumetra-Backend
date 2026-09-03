@@ -1,0 +1,53 @@
+{
+  "id": "bmp280",
+  "name": "BMP280 Pressure Sensor",
+  "category": "sensor",
+  "manufacturer": "Bosch",
+  "description": "BMP280 Pressure Sensor",
+  "interfaces": [
+    "I2C",
+    "SPI"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
+    }
+  ],
+  "keywords": [
+    "pressure",
+    "barometer",
+    "temperature",
+    "sensor",
+    "i2c"
+  ],
+  "aliases": [
+    "bmp 280"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "bmp280"
+  }
+}
