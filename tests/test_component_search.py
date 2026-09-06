@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from engine.components.search import ComponentIndex, ComponentSearchEngine, SearchFilters
+from engine.component_registry import ComponentRegistry
 from engine.lab_workspace.bus import build_bus_metadata
 from engine.lab_workspace.catalog import get_component, search_catalog
 from engine.lab_workspace.models import CanvasNode, CanvasWire, DeviceMode
 from engine.lab_workspace.wire import validate_wire
+from component_package_helpers import make_package
 
 
 def test_keyword_search_temperature():
@@ -159,3 +161,12 @@ def test_gpio_to_dht_allowed():
     )
     result = validate_wire(wire, nodes)
     assert result.valid is True
+
+
+def test_package_registry_search_filters_metadata(tmp_path):
+    make_package(tmp_path, "dht11", manufacturer="Aosong")
+    make_package(tmp_path, "bmp280", manufacturer="Bosch")
+    registry = ComponentRegistry(tmp_path, use_cache=False)
+    assert [c.component_id for c in registry.search("temperature")] == ["bmp280", "dht11"]
+    assert [c.component_id for c in registry.search(category="sensor", manufacturer="Bosch")] == ["bmp280"]
+    assert len(registry.search(interface="GPIO", voltage=3.3)) == 2

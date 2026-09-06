@@ -176,6 +176,31 @@ class TestSignalPropagationAndPinEdit:
         mgr.set_pin_mode("esp", "D4", "LOW")
         assert mgr.get_pin_state("esp", "D4")["logic"] == "LOW"
 
+    def test_write_pin_updates_connected_virtual_endpoint(self, tmp_path: Path):
+        mgr = WireManager(data_dir=tmp_path)
+        mgr.connect(
+            source=_ep("esp", "D2", kind="physical"),
+            destination=_ep("virtual_led", "IN", kind="virtual"),
+        )
+
+        result = mgr.write_pin("esp", "D2", 1, mode="OUTPUT")
+
+        assert result["propagated"][0]["device_id"] == "virtual_led"
+        target = mgr.get_pin_state("virtual_led", "IN")
+        assert target["logic"] == "HIGH"
+        assert target["current_value"] == 1
+        assert target["state"]["propagated"] is True
+
+    def test_write_pin_does_not_cross_disabled_wire(self, tmp_path: Path):
+        mgr = WireManager(data_dir=tmp_path)
+        conn = mgr.connect(source=_ep("esp", "D2"), destination=_ep("led", "IN"))
+        mgr.update_connection(conn.connection_id, {"status": "disabled"})
+
+        result = mgr.write_pin("esp", "D2", 1)
+
+        assert result["propagated"] == []
+        assert mgr.get_pin_state("led", "IN")["logic"] == "UNKNOWN"
+
 
 class TestConnectionGraph:
     def test_traversal_and_highlight(self, tmp_path: Path):

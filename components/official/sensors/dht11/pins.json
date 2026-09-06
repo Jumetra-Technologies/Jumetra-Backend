@@ -1,0 +1,5 @@
+[
+  {"name": "VCC", "type": "POWER", "voltage": 5.0},
+  {"name": "DATA", "type": "GPIO"},
+  {"name": "GND", "type": "GROUND"}
+]

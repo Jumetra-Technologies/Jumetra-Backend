@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["package", "version", "author", "license", "engine_version", "trust_level"],
+  "properties": {
+    "package": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+([+-][0-9A-Za-z.-]+)?$"},
+    "author": {"type": "string", "minLength": 1},
+    "license": {"type": "string", "minLength": 1},
+    "engine_version": {"type": "string", "minLength": 1},
+    "trust_level": {"type": "string", "enum": ["official", "community", "local", "unverified"]}
+  },
+  "additionalProperties": true
+}

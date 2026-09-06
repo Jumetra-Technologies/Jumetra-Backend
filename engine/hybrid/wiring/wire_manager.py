@@ -16,6 +16,7 @@ from .connection_events import WiringEventType, publish_wiring_event
 from .connection_graph import ConnectionGraph
 from .connection_history import ConnectionHistory
 from .pin_connection import (
+    ConnectionDirection,
     ConnectionStatus,
     PinConnection,
     PinEndpoint,
@@ -327,14 +328,79 @@ class WireManager:
             for conn in self.graph.connections_for_pin(device_id, pin):
                 conn.latency_ms = result["latency_ms"]
 
+            propagated = self._propagate_signal(
+                device_id=device_id,
+                pin=pin,
+                value=int_val,
+                source_state=state,
+            )
+
+        result["propagated"] = propagated
+
         self._broadcast(WiringEventType.SIGNAL_CHANGED, {**result, "state": state})
         self._broadcast(WiringEventType.PIN_UPDATED, {**result, "state": state})
+        for update in propagated:
+            self._broadcast(WiringEventType.PIN_UPDATED, update)
         if mode:
             self._broadcast(
                 WiringEventType.PIN_MODE_CHANGED,
                 {"device_id": device_id, "pin": pin, "mode": mode},
             )
         return result
+
+    def _propagate_signal(
+        self,
+        *,
+        device_id: str,
+        pin: str,
+        value: Any,
+        source_state: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Mirror a pin write to each active endpoint that accepts its direction.
+
+        This is deliberately local: transport to real hardware remains the
+        HybridRouter's responsibility.  Keeping the digital-twin state here
+        makes physical-to-virtual and virtual-to-physical wires observable even
+        when one side is offline, without causing a second hardware write.
+        """
+        updates: list[dict[str, Any]] = []
+        source_key = f"{device_id}:{pin}"
+        for conn in self.graph.connections_for_pin(device_id, pin):
+            if not conn.valid or conn.status != ConnectionStatus.ACTIVE.value:
+                continue
+
+            if source_key == f"{conn.source_device}:{conn.source_pin}":
+                if conn.direction == ConnectionDirection.DEST_TO_SOURCE.value:
+                    continue
+                target_device, target_pin = conn.destination_device, conn.destination_pin
+            else:
+                if conn.direction == ConnectionDirection.SOURCE_TO_DEST.value:
+                    continue
+                target_device, target_pin = conn.source_device, conn.source_pin
+
+            target_key = f"{target_device}:{target_pin}"
+            target_state = {
+                **source_state,
+                "value": value,
+                "logic": "HIGH" if value == 1 else "LOW" if value == 0 else "ANALOG",
+                "source_device": device_id,
+                "source_pin": pin,
+                "propagated": True,
+            }
+            self._pin_state[target_key] = target_state
+            updates.append(
+                {
+                    "device_id": target_device,
+                    "pin": target_pin,
+                    "value": value,
+                    "state": dict(target_state),
+                    "connection_id": conn.connection_id,
+                    "source_device": device_id,
+                    "source_pin": pin,
+                    "propagated": True,
+                }
+            )
+        return updates
 
     def set_pin_mode(self, device_id: str, pin: str, mode: str) -> dict[str, Any]:
         mode_u = mode.upper()

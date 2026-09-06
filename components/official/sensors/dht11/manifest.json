@@ -1,0 +1,8 @@
+{
+  "package": "official.dht11",
+  "version": "1.0.0",
+  "author": "HHIP",
+  "license": "MIT",
+  "engine_version": "1.0",
+  "trust_level": "official"
+}

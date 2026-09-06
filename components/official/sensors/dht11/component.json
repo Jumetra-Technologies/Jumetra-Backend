@@ -1,0 +1,12 @@
+{
+  "id": "dht11",
+  "name": "DHT11",
+  "category": "sensor",
+  "manufacturer": "Aosong",
+  "interfaces": ["GPIO"],
+  "voltage": [3.3, 5.0],
+  "behavior": "digital_sensor",
+  "renderer": "renderer.svg",
+  "pins": "pins.json",
+  "keywords": ["temperature", "humidity", "sensor"]
+}

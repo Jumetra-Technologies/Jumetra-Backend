@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["name", "type"],
+    "properties": {
+      "name": {"type": "string", "minLength": 1},
+      "type": {"type": "string", "enum": ["POWER", "GROUND", "GPIO", "ANALOG", "PWM", "I2C", "SPI", "UART", "ONEWIRE"]},
+      "voltage": {"type": "number", "exclusiveMinimum": 0}
+    },
+    "additionalProperties": true
+  }
+}
