@@ -1,12 +1,12 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "ds18b20",
+  "name": "DS18B20 Temperature",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "Maxim",
+  "description": "DS18B20 Temperature",
   "interfaces": [
     "GPIO",
-    "Digital"
+    "OneWire"
   ],
   "voltage": {
     "min": 3.3,
@@ -18,7 +18,7 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
+      "name": "DQ",
       "type": "GPIO"
     },
     {
@@ -28,12 +28,12 @@
   ],
   "keywords": [
     "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "onewire",
+    "sensor",
+    "ds18b20"
   ],
   "aliases": [
-    "dht 11"
+    "ds18b20"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +43,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "ds18b20"
   }
 }

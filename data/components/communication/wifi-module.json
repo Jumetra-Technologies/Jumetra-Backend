@@ -1,0 +1,52 @@
+{
+  "id": "wifi-module",
+  "name": "WiFi Module",
+  "category": "communication",
+  "manufacturer": "Espressif",
+  "description": "WiFi Module",
+  "interfaces": [
+    "UART",
+    "WiFi"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "TX",
+      "type": "UART"
+    },
+    {
+      "name": "RX",
+      "type": "UART"
+    }
+  ],
+  "keywords": [
+    "wifi",
+    "wireless",
+    "communication",
+    "esp"
+  ],
+  "aliases": [
+    "esp-01"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "wifi_module"
+  }
+}

@@ -1,12 +1,11 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "mpu6050",
+  "name": "MPU6050 IMU",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "InvenSense",
+  "description": "MPU6050 IMU",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "I2C"
   ],
   "voltage": {
     "min": 3.3,
@@ -18,22 +17,27 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
-    },
-    {
       "name": "GND",
       "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "imu",
+    "gyro",
+    "accelerometer",
+    "sensor",
+    "i2c"
   ],
   "aliases": [
-    "dht 11"
+    "mpu 6050"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +47,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "mpu6050"
   }
 }

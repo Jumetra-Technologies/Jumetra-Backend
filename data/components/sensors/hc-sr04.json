@@ -1,15 +1,15 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "hc-sr04",
+  "name": "HC-SR04 Ultrasonic",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "Generic",
+  "description": "HC-SR04 Ultrasonic",
   "interfaces": [
     "GPIO",
     "Digital"
   ],
   "voltage": {
-    "min": 3.3,
+    "min": 5,
     "max": 5
   },
   "pins": [
@@ -18,7 +18,11 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
+      "name": "TRIG",
+      "type": "GPIO"
+    },
+    {
+      "name": "ECHO",
       "type": "GPIO"
     },
     {
@@ -27,13 +31,12 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
+    "ultrasonic",
+    "distance",
     "sensor"
   ],
   "aliases": [
-    "dht 11"
+    "hcsr04"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +46,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "hc_sr04"
   }
 }

@@ -33,7 +33,7 @@ class ComponentIndex:
         if not self.components_dir.exists():
             logger.warning("Component catalog missing: %s", self.components_dir)
             return 0
-        for path in sorted(self.components_dir.glob("*.json")):
+        for path in sorted(self.components_dir.rglob("*.json")):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:

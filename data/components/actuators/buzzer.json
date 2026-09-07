@@ -1,12 +1,12 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "buzzer",
+  "name": "Buzzer",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Buzzer",
   "interfaces": [
     "GPIO",
-    "Digital"
+    "PWM"
   ],
   "voltage": {
     "min": 3.3,
@@ -14,11 +14,7 @@
   },
   "pins": [
     {
-      "name": "VCC",
-      "type": "POWER"
-    },
-    {
-      "name": "DATA",
+      "name": "SIG",
       "type": "GPIO"
     },
     {
@@ -27,13 +23,12 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "buzzer",
+    "sound",
+    "actuator"
   ],
   "aliases": [
-    "dht 11"
+    "beeper"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +38,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "buzzer"
   }
 }

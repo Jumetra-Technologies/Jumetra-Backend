@@ -1,0 +1,60 @@
+{
+  "id": "lora",
+  "name": "LoRa Module",
+  "category": "communication",
+  "manufacturer": "Semtech",
+  "description": "LoRa Module",
+  "interfaces": [
+    "SPI",
+    "UART"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "VCC",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "NSS",
+      "type": "SPI"
+    },
+    {
+      "name": "SCK",
+      "type": "SPI"
+    },
+    {
+      "name": "MOSI",
+      "type": "SPI"
+    },
+    {
+      "name": "MISO",
+      "type": "SPI"
+    }
+  ],
+  "keywords": [
+    "lora",
+    "radio",
+    "long range",
+    "communication"
+  ],
+  "aliases": [
+    "sx1278"
+  ],
+  "compatible_controllers": [
+    "esp32",
+    "arduino-uno",
+    "stm32",
+    "raspberry-pi-pico"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "lora"
+  }
+}

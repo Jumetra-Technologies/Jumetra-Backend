@@ -1,25 +1,29 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "dc-motor",
+  "name": "DC Motor",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "DC Motor",
   "interfaces": [
     "GPIO",
-    "Digital"
+    "PWM"
   ],
   "voltage": {
     "min": 3.3,
-    "max": 5
+    "max": 12
   },
   "pins": [
     {
-      "name": "VCC",
-      "type": "POWER"
+      "name": "IN1",
+      "type": "GPIO"
     },
     {
-      "name": "DATA",
+      "name": "IN2",
       "type": "GPIO"
+    },
+    {
+      "name": "VCC",
+      "type": "POWER"
     },
     {
       "name": "GND",
@@ -27,13 +31,12 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "motor",
+    "dc",
+    "actuator"
   ],
   "aliases": [
-    "dht 11"
+    "dcmotor"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +46,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "dc_motor"
   }
 }

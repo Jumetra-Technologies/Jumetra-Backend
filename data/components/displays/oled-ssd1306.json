@@ -1,16 +1,16 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "oled-ssd1306",
+  "name": "OLED SSD1306",
+  "category": "display",
+  "manufacturer": "Solomon",
+  "description": "OLED SSD1306",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "I2C",
+    "SPI"
   ],
   "voltage": {
     "min": 3.3,
-    "max": 5
+    "max": 3.3
   },
   "pins": [
     {
@@ -18,22 +18,27 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
-    },
-    {
       "name": "GND",
       "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "oled",
+    "display",
+    "ssd1306",
+    "i2c"
   ],
   "aliases": [
-    "dht 11"
+    "ssd1306",
+    "oled"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +48,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "oled"
   }
 }

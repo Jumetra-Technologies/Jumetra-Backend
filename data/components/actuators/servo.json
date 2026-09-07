@@ -1,16 +1,16 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "servo",
+  "name": "Servo Motor",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Servo Motor",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "PWM",
+    "GPIO"
   ],
   "voltage": {
-    "min": 3.3,
-    "max": 5
+    "min": 4.8,
+    "max": 6
   },
   "pins": [
     {
@@ -18,8 +18,8 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
+      "name": "SIG",
+      "type": "PWM"
     },
     {
       "name": "GND",
@@ -27,13 +27,13 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "servo",
+    "motor",
+    "actuator",
+    "pwm"
   ],
   "aliases": [
-    "dht 11"
+    "sg90"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +43,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "servo"
   }
 }

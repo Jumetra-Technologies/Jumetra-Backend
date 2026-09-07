@@ -1,9 +1,9 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "relay",
+  "name": "Relay Module",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "Relay Module",
   "interfaces": [
     "GPIO",
     "Digital"
@@ -18,7 +18,7 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
+      "name": "IN",
       "type": "GPIO"
     },
     {
@@ -27,14 +27,11 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "relay",
+    "switch",
+    "actuator"
   ],
-  "aliases": [
-    "dht 11"
-  ],
+  "aliases": [],
   "compatible_controllers": [
     "esp32",
     "arduino-uno",
@@ -43,6 +40,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "relay"
   }
 }

@@ -1,12 +1,13 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "soil-moisture",
+  "name": "Soil Moisture Sensor",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "Generic",
+  "description": "Soil Moisture Sensor",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "Analog",
+    "ADC",
+    "GPIO"
   ],
   "voltage": {
     "min": 3.3,
@@ -18,8 +19,8 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
+      "name": "A0",
+      "type": "ADC"
     },
     {
       "name": "GND",
@@ -27,13 +28,12 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
+    "soil",
+    "moisture",
     "sensor"
   ],
   "aliases": [
-    "dht 11"
+    "soil"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +43,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "soil_moisture"
   }
 }

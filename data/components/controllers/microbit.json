@@ -1,0 +1,54 @@
+{
+  "id": "microbit",
+  "name": "BBC micro:bit",
+  "category": "mcu",
+  "manufacturer": "BBC",
+  "description": "BBC micro:bit",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "Bluetooth"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "P0",
+      "type": "GPIO"
+    },
+    {
+      "name": "P1",
+      "type": "GPIO"
+    },
+    {
+      "name": "3V",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "microbit",
+    "micro:bit",
+    "bbc",
+    "mcu"
+  ],
+  "aliases": [
+    "micro bit",
+    "micro:bit"
+  ],
+  "compatible_controllers": [
+    "microbit"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "microbit"
+  }
+}

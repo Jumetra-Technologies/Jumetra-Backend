@@ -1,16 +1,16 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "bmp280",
+  "name": "BMP280 Pressure Sensor",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "Bosch",
+  "description": "BMP280 Pressure Sensor",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "I2C",
+    "SPI"
   ],
   "voltage": {
     "min": 3.3,
-    "max": 5
+    "max": 3.3
   },
   "pins": [
     {
@@ -18,22 +18,27 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
-    },
-    {
       "name": "GND",
       "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
     }
   ],
   "keywords": [
+    "pressure",
+    "barometer",
     "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "sensor",
+    "i2c"
   ],
   "aliases": [
-    "dht 11"
+    "bmp 280"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +48,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "bmp280"
   }
 }

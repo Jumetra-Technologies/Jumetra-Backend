@@ -1,0 +1,64 @@
+{
+  "id": "raspberry-pi-4",
+  "name": "Raspberry Pi 4",
+  "category": "mcu",
+  "manufacturer": "Raspberry Pi",
+  "description": "Raspberry Pi 4",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "WiFi",
+    "Bluetooth"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "GPIO2",
+      "type": "I2C"
+    },
+    {
+      "name": "GPIO3",
+      "type": "I2C"
+    },
+    {
+      "name": "GPIO14",
+      "type": "UART"
+    },
+    {
+      "name": "GPIO15",
+      "type": "UART"
+    },
+    {
+      "name": "5V",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "raspberry",
+    "pi",
+    "pi4",
+    "wifi",
+    "linux"
+  ],
+  "aliases": [
+    "rpi",
+    "pi 4"
+  ],
+  "compatible_controllers": [
+    "raspberry-pi-4"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "raspberry_pi_4"
+  }
+}

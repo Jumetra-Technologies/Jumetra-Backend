@@ -32,8 +32,6 @@ def normalize_interfaces(raw: list[Any]) -> list[str]:
         mapped = _IFACE_MAP.get(key, key)
         if mapped and mapped not in out:
             out.append(mapped)
-        if key not in out and key != mapped:
-            out.append(key)
     return out
 
 

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Optional
 
-from .catalog_loader import load_json_specs
+from .loader import ComponentLoader
 from .models import ComponentSearchResult, ComponentSpec
 from .paths import resolve_components_dir
 from .seed import SEED_COMPONENTS
@@ -48,6 +49,16 @@ class ComponentRegistry:
     def register(self, component: ComponentSpec) -> None:
         self._components[component.component_id] = component
 
+    def load_components(self, path: Optional[str] = None) -> int:
+        """Load and register validated JSON definitions recursively."""
+        if path:
+            self.components_dir = Path(path).expanduser().resolve()
+        loaded = ComponentLoader().load(self.components_dir)
+        for component in loaded:
+            self.register(component)
+        self.json_loaded = len(loaded)
+        return len(loaded)
+
     def get(self, component_id: str) -> Optional[ComponentSpec]:
         return self._components.get(component_id)
 
@@ -60,21 +71,17 @@ class ComponentRegistry:
     def list_all(self) -> list[ComponentSpec]:
         return sorted(self._components.values(), key=lambda c: c.name)
 
+    def search(self, query: str = "", **filters: object) -> list[ComponentSearchResult]:
+        """Search registered components using the registry's standard search engine."""
+        return ComponentSearch(self).search(query, **filters)
+
     def load_seed(self) -> None:
         for component in SEED_COMPONENTS:
             self.register(component)
 
     def load_json_catalog(self, components_dir: Optional[str] = None) -> int:
-        """Register JSON catalog entries without overwriting seed specs."""
-        if components_dir:
-            self.components_dir = resolve_components_dir(components_dir)
-        count = 0
-        for component in load_json_specs(self.components_dir):
-            if self.get(component.component_id) is None:
-                self.register(component)
-                count += 1
-        self.json_loaded = count
-        return count
+        """Backward-compatible alias for the external component loader."""
+        return self.load_components(components_dir)
 
 
 class ComponentSearch:
@@ -156,8 +163,7 @@ class ComponentSearch:
 
 def default_registry() -> ComponentRegistry:
     registry = ComponentRegistry()
-    registry.load_seed()
-    added = registry.load_json_catalog()
+    added = registry.load_components()
     total = len(registry.list_all())
     logger.info(
         "Loaded components: %s (seed + %s from %s)",

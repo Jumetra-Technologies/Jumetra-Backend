@@ -1,15 +1,15 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "lcd-16x2",
+  "name": "LCD 16x2",
+  "category": "display",
+  "manufacturer": "Hitachi",
+  "description": "LCD 16x2",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "I2C",
+    "GPIO"
   ],
   "voltage": {
-    "min": 3.3,
+    "min": 5,
     "max": 5
   },
   "pins": [
@@ -18,22 +18,27 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
-    },
-    {
       "name": "GND",
       "type": "GROUND"
+    },
+    {
+      "name": "SDA",
+      "type": "I2C"
+    },
+    {
+      "name": "SCL",
+      "type": "I2C"
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "lcd",
+    "display",
+    "16x2",
+    "i2c"
   ],
   "aliases": [
-    "dht 11"
+    "lcd",
+    "hd44780"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +48,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "lcd"
   }
 }

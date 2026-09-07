@@ -1,12 +1,12 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "hc-05",
+  "name": "Bluetooth HC-05",
+  "category": "communication",
+  "manufacturer": "Generic",
+  "description": "Bluetooth HC-05",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "UART",
+    "Bluetooth"
   ],
   "voltage": {
     "min": 3.3,
@@ -18,22 +18,26 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
-    },
-    {
       "name": "GND",
       "type": "GROUND"
+    },
+    {
+      "name": "TX",
+      "type": "UART"
+    },
+    {
+      "name": "RX",
+      "type": "UART"
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "bluetooth",
+    "uart",
+    "hc05",
+    "communication"
   ],
   "aliases": [
-    "dht 11"
+    "hc05"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +47,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "hc_05"
   }
 }

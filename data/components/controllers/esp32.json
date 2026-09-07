@@ -1,0 +1,84 @@
+{
+  "id": "esp32",
+  "name": "ESP32 DevKit",
+  "category": "mcu",
+  "manufacturer": "Espressif",
+  "description": "ESP32 DevKit",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "ADC",
+    "WiFi",
+    "Bluetooth"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "D2",
+      "type": "GPIO"
+    },
+    {
+      "name": "D4",
+      "type": "GPIO"
+    },
+    {
+      "name": "D21",
+      "type": "I2C"
+    },
+    {
+      "name": "D22",
+      "type": "I2C"
+    },
+    {
+      "name": "3V3",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    },
+    {
+      "name": "TX",
+      "type": "UART"
+    },
+    {
+      "name": "RX",
+      "type": "UART"
+    },
+    {
+      "name": "MOSI",
+      "type": "SPI"
+    },
+    {
+      "name": "MISO",
+      "type": "SPI"
+    },
+    {
+      "name": "SCK",
+      "type": "SPI"
+    }
+  ],
+  "keywords": [
+    "esp",
+    "esp32",
+    "wifi",
+    "bluetooth",
+    "mcu"
+  ],
+  "aliases": [
+    "esp 32"
+  ],
+  "compatible_controllers": [
+    "esp32"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "esp32"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "teensy",
+  "name": "Teensy 4.1",
+  "category": "mcu",
+  "manufacturer": "PJRC",
+  "description": "Teensy 4.1",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "ADC"
+  ],
+  "voltage": {
+    "min": 3.3,
+    "max": 3.3
+  },
+  "pins": [
+    {
+      "name": "D13",
+      "type": "GPIO"
+    },
+    {
+      "name": "3V3",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "teensy",
+    "mcu"
+  ],
+  "aliases": [],
+  "compatible_controllers": [
+    "teensy"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "teensy"
+  }
+}

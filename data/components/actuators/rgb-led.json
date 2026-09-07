@@ -1,12 +1,12 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
-  "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "id": "rgb-led",
+  "name": "RGB LED",
+  "category": "actuator",
+  "manufacturer": "Generic",
+  "description": "RGB LED",
   "interfaces": [
     "GPIO",
-    "Digital"
+    "PWM"
   ],
   "voltage": {
     "min": 3.3,
@@ -14,12 +14,16 @@
   },
   "pins": [
     {
-      "name": "VCC",
-      "type": "POWER"
+      "name": "R",
+      "type": "PWM"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
+      "name": "G",
+      "type": "PWM"
+    },
+    {
+      "name": "B",
+      "type": "PWM"
     },
     {
       "name": "GND",
@@ -27,13 +31,13 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
-    "sensor"
+    "led",
+    "rgb",
+    "actuator",
+    "pwm"
   ],
   "aliases": [
-    "dht 11"
+    "rgb"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +47,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "rgb_led"
   }
 }

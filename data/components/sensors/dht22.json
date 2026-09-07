@@ -1,9 +1,9 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "dht22",
+  "name": "DHT22 Temperature Humidity Sensor",
   "category": "sensor",
   "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "description": "DHT22 Temperature Humidity Sensor",
   "interfaces": [
     "GPIO",
     "Digital"
@@ -33,7 +33,8 @@
     "sensor"
   ],
   "aliases": [
-    "dht 11"
+    "am2302",
+    "dht 22"
   ],
   "compatible_controllers": [
     "esp32",

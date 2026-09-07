@@ -1,12 +1,12 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "ldr",
+  "name": "LDR Light Sensor",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "Generic",
+  "description": "LDR Light Sensor",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "Analog",
+    "ADC"
   ],
   "voltage": {
     "min": 3.3,
@@ -18,8 +18,8 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
-      "type": "GPIO"
+      "name": "SIG",
+      "type": "ADC"
     },
     {
       "name": "GND",
@@ -27,13 +27,13 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
+    "light",
+    "ldr",
+    "photoresistor",
     "sensor"
   ],
   "aliases": [
-    "dht 11"
+    "photoresistor"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +43,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "ldr"
   }
 }

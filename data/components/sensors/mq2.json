@@ -1,15 +1,16 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "mq2",
+  "name": "MQ2 Gas Sensor",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "Winsen",
+  "description": "MQ2 Gas Sensor",
   "interfaces": [
-    "GPIO",
-    "Digital"
+    "Analog",
+    "ADC",
+    "GPIO"
   ],
   "voltage": {
-    "min": 3.3,
+    "min": 5,
     "max": 5
   },
   "pins": [
@@ -18,7 +19,11 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
+      "name": "A0",
+      "type": "ADC"
+    },
+    {
+      "name": "D0",
       "type": "GPIO"
     },
     {
@@ -27,13 +32,13 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
+    "gas",
+    "smoke",
+    "mq2",
     "sensor"
   ],
   "aliases": [
-    "dht 11"
+    "mq-2"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +48,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "mq2"
   }
 }

@@ -1,9 +1,9 @@
 {
-  "id": "dht11",
-  "name": "DHT11",
+  "id": "pir",
+  "name": "PIR Motion Sensor",
   "category": "sensor",
-  "manufacturer": "Aosong",
-  "description": "DHT11 Temperature Humidity Sensor",
+  "manufacturer": "Generic",
+  "description": "PIR Motion Sensor",
   "interfaces": [
     "GPIO",
     "Digital"
@@ -18,7 +18,7 @@
       "type": "POWER"
     },
     {
-      "name": "DATA",
+      "name": "OUT",
       "type": "GPIO"
     },
     {
@@ -27,13 +27,12 @@
     }
   ],
   "keywords": [
-    "temperature",
-    "humidity",
-    "dht",
+    "motion",
+    "pir",
     "sensor"
   ],
   "aliases": [
-    "dht 11"
+    "motion"
   ],
   "compatible_controllers": [
     "esp32",
@@ -43,6 +42,6 @@
   ],
   "simulation": {
     "supported": true,
-    "model": "temperature_humidity"
+    "model": "pir"
   }
 }

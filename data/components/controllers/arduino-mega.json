@@ -1,0 +1,53 @@
+{
+  "id": "arduino-mega",
+  "name": "Arduino Mega",
+  "category": "mcu",
+  "manufacturer": "Arduino",
+  "description": "Arduino Mega",
+  "interfaces": [
+    "GPIO",
+    "PWM",
+    "UART",
+    "I2C",
+    "SPI",
+    "ADC"
+  ],
+  "voltage": {
+    "min": 5,
+    "max": 5
+  },
+  "pins": [
+    {
+      "name": "D13",
+      "type": "GPIO"
+    },
+    {
+      "name": "A0",
+      "type": "ADC"
+    },
+    {
+      "name": "5V",
+      "type": "POWER"
+    },
+    {
+      "name": "GND",
+      "type": "GROUND"
+    }
+  ],
+  "keywords": [
+    "arduino",
+    "mega",
+    "mcu"
+  ],
+  "aliases": [
+    "mega"
+  ],
+  "compatible_controllers": [
+    "arduino-uno",
+    "arduino-mega"
+  ],
+  "simulation": {
+    "supported": true,
+    "model": "arduino_mega"
+  }
+}
