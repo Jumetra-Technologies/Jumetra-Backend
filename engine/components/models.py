@@ -52,6 +52,7 @@ class ComponentSpec:
     libraries: list[str] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
     datasheet_url: str = ""
+    version: str = "1.0.0"
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -79,6 +80,7 @@ class ComponentSpec:
             libraries=list(data.get("libraries") or []),
             tags=list(data.get("tags") or []),
             datasheet_url=str(data.get("datasheet_url", "")),
+            version=str(data.get("version", "1.0.0")),
         )
 
 

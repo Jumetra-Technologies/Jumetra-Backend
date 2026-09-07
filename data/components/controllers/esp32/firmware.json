@@ -1,0 +1,4 @@
+{
+  "supported_frameworks": ["arduino", "esp-idf"],
+  "drivers": ["wifi", "bluetooth"]
+}

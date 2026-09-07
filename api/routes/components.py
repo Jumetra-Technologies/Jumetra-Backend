@@ -39,3 +39,19 @@ def get_component(component_id: str, request: Request) -> dict:
         return request.app.state.component_service.get_component(component_id)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/{component_id}/versions")
+def list_component_versions(component_id: str, request: Request) -> list[dict]:
+    try:
+        return request.app.state.component_service.list_versions(component_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/{component_id}/metadata")
+def get_component_metadata(component_id: str, request: Request) -> dict:
+    try:
+        return request.app.state.component_service.get_metadata(component_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

@@ -39,6 +39,9 @@ class ComponentIndex:
             except (OSError, json.JSONDecodeError) as exc:
                 logger.warning("Skipping invalid component JSON %s: %s", path, exc)
                 continue
+            if not isinstance(data, dict):
+                logger.warning("Skipping non-object component JSON %s", path)
+                continue
             cid = str(data.get("id") or data.get("component_id") or path.stem)
             data["id"] = cid
             data.setdefault("component_id", cid)

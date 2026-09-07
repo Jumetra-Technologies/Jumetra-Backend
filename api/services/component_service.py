@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from engine.components import ComponentRegistry, ComponentSearch, default_registry
+from engine.components import ComponentRegistry, ComponentSearch, ComponentSearchIndex, default_registry
 from engine.components.paths import resolve_components_dir
 from engine.components.search import ComponentIndex
 from engine.controllers import CompatibilityEngine, ControllerRegistry, default_controller_registry
@@ -36,6 +36,7 @@ class ComponentService:
         self.search_engine = ComponentSearch(self.registry)
         self.compatibility = CompatibilityEngine()
         self.index = ComponentIndex(self.registry.components_dir)
+        self.intelligence_index = ComponentSearchIndex(self.registry)
 
     def search(
         self,
@@ -67,6 +68,9 @@ class ComponentService:
                     if cid not in result.component.component_id.lower():
                         continue
             item = result.to_dict()
+            item["version"] = result.component.version
+            item["manufacturer"] = result.component.manufacturer
+            item["tags"] = list(result.component.tags)
             item["compatible_controllers"] = compatible_ids or [
                 str(c) for c in ((self.index.get(result.component.component_id) or {}).get("compatible_controllers") or [])
             ]
@@ -85,6 +89,10 @@ class ComponentService:
                 item["name"] = result.component.name
                 item["category"] = explorer.get("category") or result.component.category
                 item["voltage_v"] = result.component.voltage_v
+                simulation = explorer.get("simulation") or {}
+                item["simulation_support"] = bool(simulation.get("supported", False))
+                item["renderer"] = simulation.get("renderer", "")
+                item["firmware_support"] = list((doc.get("firmware") or {}).get("supported_frameworks", []))
             else:
                 item["component_id"] = result.component.component_id
                 item["name"] = result.component.name
@@ -92,15 +100,49 @@ class ComponentService:
                 item["voltage_v"] = result.component.voltage_v
                 item["interfaces"] = result.component.interfaces
                 item["pins"] = []
+                item["simulation_support"] = False
+                item["renderer"] = ""
+                item["firmware_support"] = []
             output.append(item)
         return output
 
     def get_component(self, component_id: str) -> dict[str, Any]:
         component = self.registry.require(component_id)
         compatible = self.compatibility.compatible_controllers(component, self.controllers)
-        return {
+        result = {
             "component": component.to_dict(),
             "compatibility": [c.to_dict() for c in compatible],
+        }
+        document = self.index.get(component.component_id) or {}
+        simulation = document.get("simulation") or {}
+        result["version"] = component.version
+        result["manufacturer"] = component.manufacturer
+        result["tags"] = list(component.tags)
+        result["simulation_support"] = bool(simulation.get("supported", False))
+        result["renderer"] = simulation.get("renderer", "")
+        result["firmware_support"] = list((document.get("firmware") or {}).get("supported_frameworks", []))
+        return result
+
+    def list_versions(self, component_id: str) -> list[dict[str, Any]]:
+        if self.registry.get(component_id) is None:
+            raise KeyError(f"component not found: {component_id}")
+        return [{"component_id": component_id, "version": version} for version in self.registry.list_versions(component_id)]
+
+    def get_metadata(self, component_id: str) -> dict[str, Any]:
+        component = self.registry.require(component_id)
+        document = self.index.get(component_id) or {}
+        return {
+            "id": component.component_id,
+            "name": component.name,
+            "version": component.version,
+            "manufacturer": component.manufacturer,
+            "description": component.description,
+            "category": component.category,
+            "tags": list(component.tags),
+            "interfaces": list(component.interfaces),
+            "simulation_support": bool((document.get("simulation") or {}).get("supported", False)),
+            "renderer": (document.get("rendering") or {}).get("renderer_type", ""),
+            "firmware_support": list((document.get("firmware") or {}).get("supported_frameworks", [])),
         }
 
     def list_controllers(self) -> list[dict[str, Any]]:

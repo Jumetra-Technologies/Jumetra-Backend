@@ -1,0 +1,12 @@
+{
+  "id": "dht11",
+  "name": "DHT11",
+  "version": "1.0.0",
+  "category": "sensor",
+  "manufacturer": "Aosong",
+  "description": "Digital temperature and humidity sensor",
+  "interfaces": ["GPIO"],
+  "voltage": {"min": 3.3, "max": 5},
+  "compatible_controllers": ["esp32", "arduino-uno"],
+  "simulation": {"behavior_model": "temperature_sensor", "simulation_supported": true}
+}

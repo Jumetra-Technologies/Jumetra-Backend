@@ -1,0 +1,11 @@
+{
+  "id": "esp32",
+  "name": "ESP32 DevKit",
+  "version": "1.0.0",
+  "category": "mcu",
+  "manufacturer": "Espressif",
+  "description": "ESP32 development controller",
+  "interfaces": ["GPIO", "PWM", "UART", "I2C", "SPI", "ADC", "WiFi", "Bluetooth"],
+  "voltage": {"min": 3.3, "max": 3.3},
+  "simulation": {"behavior_model": "esp32", "simulation_supported": true}
+}

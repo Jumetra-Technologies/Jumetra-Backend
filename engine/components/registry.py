@@ -10,6 +10,9 @@ from .loader import ComponentLoader
 from .models import ComponentSearchResult, ComponentSpec
 from .paths import resolve_components_dir
 from .seed import SEED_COMPONENTS
+from .package_loader import ComponentPackageLoader
+from .schema import ComponentDefinition
+from .versioning import resolve_latest, versioned_id
 
 logger = logging.getLogger("hhip.components")
 
@@ -43,11 +46,18 @@ class ComponentRegistry:
 
     def __init__(self) -> None:
         self._components: dict[str, ComponentSpec] = {}
+        self._versions: dict[str, dict[str, ComponentSpec]] = {}
+        self._definitions: dict[str, ComponentDefinition] = {}
         self.components_dir = resolve_components_dir()
         self.json_loaded = 0
 
     def register(self, component: ComponentSpec) -> None:
         self._components[component.component_id] = component
+        self._versions.setdefault(component.component_id, {})[component.version] = component
+
+    def register_definition(self, definition: ComponentDefinition) -> None:
+        self._definitions[versioned_id(definition.component_id, definition.version)] = definition
+        self.register(definition.to_spec())
 
     def load_components(self, path: Optional[str] = None) -> int:
         """Load and register validated JSON definitions recursively."""
@@ -56,11 +66,27 @@ class ComponentRegistry:
         loaded = ComponentLoader().load(self.components_dir)
         for component in loaded:
             self.register(component)
+        for package in ComponentPackageLoader().load(self.components_dir):
+            self.register_definition(package.definition)
         self.json_loaded = len(loaded)
         return len(loaded)
 
     def get(self, component_id: str) -> Optional[ComponentSpec]:
+        if "@" in component_id:
+            base_id, requested_version = component_id.rsplit("@", 1)
+            return self._versions.get(base_id, {}).get(requested_version)
         return self._components.get(component_id)
+
+    def list_versions(self, component_id: str) -> list[str]:
+        return sorted(self._versions.get(component_id, {}), key=lambda value: tuple(int(part) for part in value.split(".")[:3]))
+
+    def latest_version(self, component_id: str) -> Optional[str]:
+        versions = self.list_versions(component_id)
+        return resolve_latest(versions) if versions else None
+
+    def get_definition(self, component_id: str, version: str | None = None) -> Optional[ComponentDefinition]:
+        selected = version or self.latest_version(component_id)
+        return self._definitions.get(versioned_id(component_id, selected)) if selected else None
 
     def require(self, component_id: str) -> ComponentSpec:
         comp = self.get(component_id)

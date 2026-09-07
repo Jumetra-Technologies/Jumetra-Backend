@@ -1,0 +1,7 @@
+[
+  {"pin_number": 2, "pin_name": "D2", "pin_type": "GPIO"},
+  {"pin_number": 21, "pin_name": "SDA", "pin_type": "I2C"},
+  {"pin_number": 22, "pin_name": "SCL", "pin_type": "I2C"},
+  {"pin_number": 3, "pin_name": "3V3", "pin_type": "POWER"},
+  {"pin_number": 4, "pin_name": "GND", "pin_type": "GROUND"}
+]

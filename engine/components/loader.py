@@ -31,6 +31,8 @@ class ComponentLoader:
             key=lambda candidate: (-len(candidate.relative_to(root).parts), str(candidate)),
         )
         for file_path in files:
+            if file_path.name in {"manifest.json", "pins.json", "metadata.json", "firmware.json"}:
+                continue
             if not self._is_allowed_file(root, file_path):
                 logger.warning("Skipping component outside catalog: %s", file_path)
                 continue
@@ -38,6 +40,8 @@ class ComponentLoader:
                 if file_path.stat().st_size > MAX_FILE_BYTES:
                     raise ValueError("JSON file exceeds 1MB")
                 document = json.loads(file_path.read_text(encoding="utf-8"))
+                if not isinstance(document, dict):
+                    continue
                 errors = self.validator.validate(document, seen_ids)
                 if errors:
                     raise ValueError("; ".join(errors))

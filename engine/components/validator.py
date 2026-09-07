@@ -68,9 +68,10 @@ class ComponentValidator:
                 if not isinstance(pin, dict):
                     errors.append(f"pin {index} must be an object")
                     continue
-                if not isinstance(pin.get("name"), str) or not pin["name"].strip():
+                pin_name = pin.get("name", pin.get("pin_name"))
+                if not isinstance(pin_name, str) or not pin_name.strip():
                     errors.append(f"pin {index} name is required")
-                pin_type = str(pin.get("type", "")).upper()
+                pin_type = str(pin.get("type", pin.get("pin_type", ""))).upper()
                 if pin_type not in SUPPORTED_PIN_TYPES:
                     errors.append(f"pin {index} has invalid type: {pin.get('type')}")
 

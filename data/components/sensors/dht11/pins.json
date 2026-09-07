@@ -1,0 +1,5 @@
+[
+  {"pin_number": 1, "pin_name": "VCC", "pin_type": "POWER"},
+  {"pin_number": 2, "pin_name": "DATA", "pin_type": "GPIO"},
+  {"pin_number": 3, "pin_name": "GND", "pin_type": "GROUND"}
+]
