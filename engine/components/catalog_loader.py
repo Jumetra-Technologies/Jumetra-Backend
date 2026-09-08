@@ -61,6 +61,7 @@ def json_doc_to_spec(data: dict[str, Any]) -> ComponentSpec:
         libraries=list(data.get("libraries") or []),
         tags=keywords + aliases,
         datasheet_url=str(data.get("datasheet_url") or ""),
+        version=str(data.get("version") or "1.0.0"),
     )
 
 

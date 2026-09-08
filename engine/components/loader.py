@@ -19,6 +19,7 @@ MAX_FILE_BYTES = 1024 * 1024
 class ComponentLoader:
     def __init__(self, validator: ComponentValidator | None = None) -> None:
         self.validator = validator or ComponentValidator()
+        self.source_paths: dict[str, Path] = {}
 
     def load(self, path: Path | str) -> list[ComponentSpec]:
         root = Path(path).expanduser().resolve()
@@ -31,7 +32,7 @@ class ComponentLoader:
             key=lambda candidate: (-len(candidate.relative_to(root).parts), str(candidate)),
         )
         for file_path in files:
-            if file_path.name in {"manifest.json", "pins.json", "metadata.json", "firmware.json"}:
+            if not self._is_legacy_file(root, file_path):
                 continue
             if not self._is_allowed_file(root, file_path):
                 logger.warning("Skipping component outside catalog: %s", file_path)
@@ -51,7 +52,17 @@ class ComponentLoader:
                 continue
             specs.append(spec)
             seen_ids.add(spec.component_id)
+            self.source_paths[spec.component_id] = file_path
         return specs
+
+    @staticmethod
+    def _is_legacy_file(root: Path, file_path: Path) -> bool:
+        relative = file_path.relative_to(root)
+        if file_path.name in {"manifest.json", "pins.json", "metadata.json", "firmware.json"}:
+            return False
+        if "examples" in relative.parts:
+            return False
+        return not any((parent / "manifest.json").is_file() for parent in file_path.parents if parent != root)
 
     @staticmethod
     def _is_allowed_file(root: Path, file_path: Path) -> bool:

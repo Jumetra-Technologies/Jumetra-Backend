@@ -42,6 +42,8 @@ class ComponentPackageLoader:
         packages: list[LoadedComponentPackage] = []
         seen_versions: set[str] = set()
         for manifest_path in sorted(root.rglob("manifest.json")):
+            if "examples" in manifest_path.relative_to(root).parts:
+                continue
             package = manifest_path.parent
             try:
                 self.scanner.validate_package(root, package)

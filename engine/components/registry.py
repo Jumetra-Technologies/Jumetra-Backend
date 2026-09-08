@@ -11,6 +11,7 @@ from .models import ComponentSearchResult, ComponentSpec
 from .paths import resolve_components_dir
 from .seed import SEED_COMPONENTS
 from .package_loader import ComponentPackageLoader
+from .resolution import ComponentResolver
 from .schema import ComponentDefinition
 from .versioning import resolve_latest, versioned_id
 
@@ -63,13 +64,27 @@ class ComponentRegistry:
         """Load and register validated JSON definitions recursively."""
         if path:
             self.components_dir = Path(path).expanduser().resolve()
-        loaded = ComponentLoader().load(self.components_dir)
+        legacy_loader = ComponentLoader()
+        loaded = legacy_loader.load(self.components_dir)
+        packages = ComponentPackageLoader().load(self.components_dir)
+        selected = ComponentResolver().resolve(packages, loaded)
+        package_by_id = {package.spec.component_id: package for package in packages}
+        package_ids = set(package_by_id)
+        for selected_component in selected:
+            component = getattr(selected_component, "spec", selected_component)
+            if component.component_id in package_ids:
+                package = selected_component if hasattr(selected_component, "definition") else package_by_id[component.component_id]
+                self.register_definition(package.definition)
+                logger.info("Loaded component package: %s@%s", component.component_id, component.version)
+            else:
+                self.register(component)
+                logger.info("Loaded legacy component: %s@legacy", component.component_id)
         for component in loaded:
-            self.register(component)
-        for package in ComponentPackageLoader().load(self.components_dir):
-            self.register_definition(package.definition)
-        self.json_loaded = len(loaded)
-        return len(loaded)
+            if component.component_id in package_ids:
+                source = legacy_loader.source_paths.get(component.component_id)
+                logger.info("Ignored duplicate legacy component: %s", source.name if source else component.component_id)
+        self.json_loaded = len(selected)
+        return len(selected)
 
     def get(self, component_id: str) -> Optional[ComponentSpec]:
         if "@" in component_id:
