@@ -12,6 +12,7 @@ Or from ``hhip/``::
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -25,8 +26,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "api.main:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=True,
-        reload_dirs=[str(_HHIP_ROOT)],
+        host=os.environ.get("HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", "8000")),
+        reload=os.environ.get("UVICORN_RELOAD", "").lower() in {"1", "true", "yes"},
     )

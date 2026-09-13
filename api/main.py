@@ -53,6 +53,12 @@ def _default_data_dir() -> Path:
     return Path(__file__).resolve().parent.parent / "data"
 
 
+def _cors_origins() -> list[str]:
+    configured = os.environ.get("HHIP_CORS_ORIGINS", "")
+    origins = [origin.strip() for origin in configured.split(",") if origin.strip()]
+    return origins or ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     data_dir = getattr(app.state, "data_dir", None) or _default_data_dir()
@@ -121,7 +127,7 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        allow_origins=_cors_origins(),
         allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?",
         allow_credentials=True,
         allow_methods=["*"],

@@ -167,6 +167,16 @@ service.stop_simulation(lab["laboratory_id"])
 - Wokwi/Proteus remain pluggable adapters — in-process runtime is the default
 - Laboratory reload from disk into a running engine is not yet implemented
 
+## Deploying to Render
+
+This repository includes a Render Blueprint in `render.yaml`. Create a new
+Blueprint from the repository in Render and set `HHIP_CORS_ORIGINS` to the
+comma-separated origin(s) of the deployed frontend, for example
+`https://app.example.com`.
+
+The Blueprint uses `/var/data` for SQLite and application data and attaches a
+1 GB persistent disk. The service health check is `/health`.
+
 ## Repository structure
 
 ```text
