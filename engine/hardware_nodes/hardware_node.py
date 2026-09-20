@@ -44,6 +44,12 @@ class HardwareNode:
     health: str = "unknown"
     metadata: dict[str, Any] = field(default_factory=dict)
     node_id: str = ""  # canvas node id when mirrored into lab workspace
+    # True only when a user explicitly disconnected this device (as opposed
+    # to an auto-detected unplug). While True, background reconnect() sweeps
+    # skip this node — it stays OFFLINE until the user explicitly asks to
+    # reconnect it by device_id, or it's hard-removed. See
+    # NODE_RECONCILIATION_SPEC.md, "Bug 1" / the WAITING-vs-OFFLINE design.
+    manually_disabled: bool = False
 
     def __post_init__(self) -> None:
         if not self.node_id:
@@ -79,6 +85,7 @@ class HardwareNode:
             "last_sync_ms": self.last_sync_ms,
             "health": self.health,
             "metadata": dict(self.metadata),
+            "manually_disabled": self.manually_disabled,
             # Unified hardware node — no virtual/physical distinction in UI
             "kind": "hardware",
             "component_id": self.board_type,
@@ -140,11 +147,20 @@ class HardwareNode:
             self.health = "ok"
 
     def mark_waiting(self) -> None:
+        """Auto-detected loss (unplug, timeout). Reconnect sweeps keep trying."""
         self.status = HardwareNodeStatus.WAITING
         self.available = False
         self.health = "waiting"
 
     def mark_offline(self) -> None:
+        """
+        Deliberate disconnect. Callers that mean "the user turned this off"
+        should also set manually_disabled = True (see
+        WorkspaceSyncService.disable_device()) so reconnect() sweeps leave
+        it alone. mark_offline() alone only sets the status/health/available
+        fields — it does not touch manually_disabled, so it stays usable as
+        a plain status setter for other callers if any exist.
+        """
         self.status = HardwareNodeStatus.OFFLINE
         self.available = False
         self.health = "offline"
@@ -185,6 +201,7 @@ class HardwareNode:
             health=str(data.get("health") or "unknown"),
             metadata=dict(data.get("metadata") or {}),
             node_id=str(data.get("node_id") or ""),
+            manually_disabled=bool(data.get("manually_disabled", False)),
         )
 
 

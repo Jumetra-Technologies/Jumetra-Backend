@@ -1,0 +1,4 @@
+cJSON v1.7.18 (MIT) — the one third-party dependency permitted for the
+HHIP protocol layer. Vendored here so the SDK compiles without a
+network fetch. Do not add other third-party libraries without an
+explicit architecture note.
