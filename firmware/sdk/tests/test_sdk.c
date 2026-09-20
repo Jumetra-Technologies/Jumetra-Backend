@@ -538,6 +538,135 @@ static void test_hal_interfaces(void)
     ASSERT_EQ_INT(analog, 123);
 }
 
+typedef struct mock_uart {
+    unsigned char tx[HHIP_ENCODE_MAX];
+    size_t tx_len;
+    unsigned char rx[HHIP_ENCODE_MAX];
+    size_t rx_len;
+    size_t rx_pos;
+    uint32_t now_ms;
+} mock_uart_t;
+
+static int mock_uart_write(void *ctx, const char *bytes, size_t len)
+{
+    mock_uart_t *uart = (mock_uart_t *)ctx;
+
+    if (uart->tx_len + len > sizeof(uart->tx)) {
+        return -1;
+    }
+    memcpy(uart->tx + uart->tx_len, bytes, len);
+    uart->tx_len += len;
+    return 0;
+}
+
+static int mock_uart_read_byte(void *ctx, unsigned char *out)
+{
+    mock_uart_t *uart = (mock_uart_t *)ctx;
+
+    if (uart->rx_pos >= uart->rx_len) {
+        return 1;
+    }
+    *out = uart->rx[uart->rx_pos++];
+    return 0;
+}
+
+static uint32_t mock_uart_millis(void *ctx)
+{
+    return ((mock_uart_t *)ctx)->now_ms;
+}
+
+static void mock_uart_feed(mock_uart_t *uart, const char *text)
+{
+    size_t n = strlen(text);
+
+    memcpy(uart->rx, text, n);
+    uart->rx_len = n;
+    uart->rx_pos = 0;
+}
+
+static void test_serial_encode_decode_framing(void)
+{
+    mock_uart_t uart;
+    hhip_uart_hal_t hal;
+    hhip_serial_transport_t serial;
+    hhip_message_t out;
+    hhip_message_t in;
+    char encoded[HHIP_ENCODE_MAX];
+
+    memset(&uart, 0, sizeof(uart));
+    memset(&hal, 0, sizeof(hal));
+    hal.ctx = &uart;
+    hal.write = mock_uart_write;
+    hal.read_byte = mock_uart_read_byte;
+    hal.millis = mock_uart_millis;
+
+    ASSERT_EQ_INT(hhip_serial_transport_init(&serial, &hal, 100), HHIP_OK);
+    ASSERT_EQ_INT(hhip_protocol_decode(k_sample_hello, &out), HHIP_OK);
+    ASSERT_EQ_INT(hhip_protocol_encode(&out, encoded, sizeof(encoded)), HHIP_OK);
+    ASSERT_TRUE(encoded[strlen(encoded) - 1U] != '\n');
+
+    ASSERT_EQ_INT(hhip_serial_send_message(&serial, &out), HHIP_OK);
+    ASSERT_TRUE(uart.tx_len > 0U);
+    ASSERT_EQ_INT((int)uart.tx[uart.tx_len - 1U], (int)'\n');
+    ASSERT_EQ_INT((int)uart.tx_len, (int)(strlen(encoded) + 1U));
+    ASSERT_TRUE(memcmp(uart.tx, encoded, strlen(encoded)) == 0);
+
+    memcpy(uart.rx, uart.tx, uart.tx_len);
+    uart.rx_len = uart.tx_len;
+    uart.rx_pos = 0;
+
+    ASSERT_EQ_INT(hhip_serial_receive_message(&serial, &in), HHIP_OK);
+    ASSERT_STREQ(in.type, HHIP_MSGTYPE_HELLO);
+    ASSERT_STREQ(in.source, "esp32_01");
+    ASSERT_STREQ(in.message_id, "unique-id");
+    ASSERT_EQ_INT(in.version, 1);
+    ASSERT_EQ_INT(in.sequence, 1);
+}
+
+static void test_serial_corrupted_and_timeout(void)
+{
+    mock_uart_t uart;
+    hhip_uart_hal_t hal;
+    hhip_serial_transport_t serial;
+    hhip_message_t in;
+
+    memset(&uart, 0, sizeof(uart));
+    memset(&hal, 0, sizeof(hal));
+    hal.ctx = &uart;
+    hal.write = mock_uart_write;
+    hal.read_byte = mock_uart_read_byte;
+    hal.millis = mock_uart_millis;
+    ASSERT_EQ_INT(hhip_serial_transport_init(&serial, &hal, 10), HHIP_OK);
+
+    mock_uart_feed(&uart, "{not valid json\n");
+    ASSERT_EQ_INT(hhip_serial_receive_message(&serial, &in), HHIP_ERR_INVALID_MESSAGE);
+
+    mock_uart_feed(&uart, "[1,2,3]\n");
+    ASSERT_EQ_INT(hhip_serial_receive_message(&serial, &in), HHIP_ERR_INVALID_MESSAGE);
+
+    memset(&uart, 0, sizeof(uart));
+    ASSERT_EQ_INT(hhip_serial_transport_init(&serial, &hal, 10), HHIP_OK);
+    mock_uart_feed(&uart, "{\"version\":1,\"type\":\"HELLO\""); /* no newline */
+    uart.now_ms = 0;
+    ASSERT_EQ_INT(hhip_serial_receive_message(&serial, &in), HHIP_ERR_TIMEOUT);
+    ASSERT_TRUE(serial.rx_len > 0U);
+    uart.now_ms = 50;
+    ASSERT_EQ_INT(hhip_serial_receive_message(&serial, &in), HHIP_ERR_TIMEOUT);
+    ASSERT_EQ_INT((int)serial.rx_len, 0);
+
+    memset(&uart, 0, sizeof(uart));
+    ASSERT_EQ_INT(hhip_serial_transport_init(&serial, &hal, 10), HHIP_OK);
+    {
+        size_t i;
+        for (i = 0; i < sizeof(uart.rx); i++) {
+            uart.rx[i] = (unsigned char)'A';
+        }
+        uart.rx_len = sizeof(uart.rx);
+        uart.rx_pos = 0;
+    }
+    ASSERT_EQ_INT(hhip_serial_receive_message(&serial, &in), HHIP_ERR_INTERNAL_ERROR);
+}
+
 int main(void)
 {
     cJSON_Hooks hooks;
@@ -556,6 +685,8 @@ int main(void)
     test_dispatch_two_generations();
     test_transport_loopback();
     test_hal_interfaces();
+    test_serial_encode_decode_framing();
+    test_serial_corrupted_and_timeout();
 
     ASSERT_TRUE(g_cjson_allocs > 0);
     ASSERT_EQ_INT(g_cjson_allocs, g_cjson_frees);

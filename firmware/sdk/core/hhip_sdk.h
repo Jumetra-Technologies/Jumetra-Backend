@@ -15,6 +15,7 @@
 #include "hhip_capabilities.h"
 #include "hhip_protocol.h"
 #include "hhip_transport.h"
+#include "hhip_serial_transport.h"
 #include "hhip_hal.h"
 
 #endif /* HHIP_SDK_H */

@@ -42,6 +42,7 @@ SRCS = \
 	protocol/hhip_protocol.c \
 	protocol/cjson/cJSON.c \
 	transport/hhip_transport.c \
+	transport/hhip_serial_transport.c \
 	tests/test_sdk.c
 
 BUILD_DIR = build
