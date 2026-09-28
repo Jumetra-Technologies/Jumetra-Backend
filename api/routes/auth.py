@@ -21,6 +21,13 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer(auto_error=False)
 
 
+def _required_env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise HTTPException(status_code=500, detail=f"{name} is not configured")
+    return value
+
+
 def _get_db_factory(request: Request):
     return request.app.state.db_factory
 
@@ -52,10 +59,8 @@ def _ensure_org(session: Any) -> Organization:
 
 @router.get("/google/login")
 def google_login() -> RedirectResponse:
-    client_id = os.environ.get("GOOGLE_CLIENT_ID")
-    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
-    if not client_id or not redirect_uri:
-        raise HTTPException(status_code=500, detail="Google OAuth is not configured")
+    client_id = _required_env("GOOGLE_CLIENT_ID")
+    redirect_uri = _required_env("GOOGLE_REDIRECT_URI")
 
     params = {
         "client_id": client_id,
@@ -75,11 +80,9 @@ def google_callback(request: Request, code: str | None = None) -> dict[str, Any]
     if not code:
         raise HTTPException(status_code=400, detail="Missing Google auth code")
 
-    client_id = os.environ.get("GOOGLE_CLIENT_ID")
-    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET")
-    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
-    if not client_id or not client_secret or not redirect_uri:
-        raise HTTPException(status_code=500, detail="Google OAuth is not configured")
+    client_id = _required_env("GOOGLE_CLIENT_ID")
+    client_secret = _required_env("GOOGLE_CLIENT_SECRET")
+    redirect_uri = _required_env("GOOGLE_REDIRECT_URI")
 
     token_response = requests.post(
         "https://oauth2.googleapis.com/token",

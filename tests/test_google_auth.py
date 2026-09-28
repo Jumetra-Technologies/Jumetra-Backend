@@ -28,8 +28,11 @@ def test_google_login_redirects_to_google(monkeypatch, tmp_path):
 
 def test_google_callback_returns_local_token(monkeypatch, tmp_path):
     client = _client(tmp_path, monkeypatch)
+    captured = {}
 
     def fake_post(url, data=None, headers=None, timeout=None):
+        captured["data"] = data
+
         class FakeResponse:
             status_code = 200
 
@@ -59,6 +62,9 @@ def test_google_callback_returns_local_token(monkeypatch, tmp_path):
 
     response = client.get("/auth/google/callback?code=test-code")
 
+    assert captured["data"]["code"] == "test-code"
+    assert captured["data"]["grant_type"] == "authorization_code"
+    assert captured["data"]["redirect_uri"] == "http://localhost:8000/auth/google/callback"
     assert response.status_code == 200
     payload = response.json()
     assert payload["user"]["email"] == "alice@example.com"
