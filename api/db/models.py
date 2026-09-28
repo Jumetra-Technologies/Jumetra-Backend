@@ -39,6 +39,8 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    google_sub: Mapped[Optional[str]] = mapped_column(String(128), unique=True, nullable=True, index=True)
+    picture_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     role: Mapped[str] = mapped_column(String(32), default=Role.RESEARCHER.value)
     organization_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,6 +19,7 @@ from engine.devices.device_manager import DeviceManager
 
 from .db import init_db
 from .routes.analytics import router as analytics_router
+from .routes.auth import router as auth_router
 from .routes.components import router as components_router
 from .routes.components_v2 import router as components_v2_router
 from .routes.controllers import router as controllers_router
@@ -44,6 +46,8 @@ from .services.workspace_hardware_service import WorkspaceHardwareService
 from .services.workspace_wiring_service import WorkspaceWiringService
 from .services.workspace_service import WorkspaceService
 from engine.firmware import FirmwareStudioService
+
+load_dotenv()
 
 
 def _default_data_dir() -> Path:
@@ -122,8 +126,12 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
         version="3.0.0",
         lifespan=lifespan,
     )
-    if data_dir is not None:
-        app.state.data_dir = Path(data_dir)
+    app.state.data_dir = Path(data_dir) if data_dir is not None else _default_data_dir()
+    app.state.db_factory = init_db(app.state.data_dir)
+    app.state.publisher = DashboardEventPublisher()
+    app.state.event_bus = EventBus()
+    app.state.device_manager = DeviceManager()
+    app.state.device_manager.bind_event_bus(app.state.event_bus)
 
     app.add_middleware(
         CORSMiddleware,
@@ -134,6 +142,7 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.include_router(auth_router)
     app.include_router(experiments_router)
     app.include_router(devices_router)
     app.include_router(analytics_router)
