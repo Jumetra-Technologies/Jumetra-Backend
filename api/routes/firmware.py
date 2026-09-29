@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
+
+from ..services.job_scheduler import JobQueueFull
 
 router = APIRouter(prefix="/firmware", tags=["firmware"])
 
@@ -89,6 +92,25 @@ def build_firmware(body: BuildRequest, request: Request) -> dict[str, Any]:
         return request.app.state.firmware_service.build(body.project_id, use_cache=body.use_cache)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/build/jobs", status_code=status.HTTP_202_ACCEPTED)
+def queue_firmware_build(body: BuildRequest, request: Request) -> dict[str, Any]:
+    try:
+        request.app.state.firmware_service.get_project(body.project_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    try:
+        return request.app.state.job_scheduler.submit(
+            "firmware_build",
+            request.app.state.firmware_service.build,
+            body.project_id,
+            use_cache=body.use_cache,
+            dedupe_key=f"firmware-build:{body.project_id}:{body.use_cache}",
+        )
+    except JobQueueFull as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
 
 
 @router.post("/upload")
