@@ -24,6 +24,18 @@ class TestHealth:
         assert resp.json()["status"] == "ok"
 
 
+def test_write_routes_require_authentication_in_production_mode(tmp_path, monkeypatch):
+    monkeypatch.setenv("HHIP_REQUIRE_AUTH", "true")
+    app = create_app(data_dir=tmp_path)
+    with TestClient(app) as secure_client:
+        response = secure_client.post(
+            "/experiments/start",
+            headers={"origin": "https://hhipsystemv0.web.app"},
+            json={},
+        )
+    assert response.status_code == 401
+
+
 class TestExperimentsAPI:
     def test_list_experiments(self, client):
         resp = client.get("/experiments")

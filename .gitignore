@@ -9,6 +9,8 @@ dashboard/
 # Local environment and database files
 .env*
 *.db
+/credentials/
+/data/.session_secret
 
 # Generated firmware and workspace project data
 data/firmware/

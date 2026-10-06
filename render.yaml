@@ -10,6 +10,12 @@ services:
         value: /var/data
       - key: HHIP_CORS_ORIGINS
         sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: lax
+      - key: HHIP_REQUIRE_AUTH
+        value: "true"
     disk:
       name: jumetra-data
       mountPath: /var/data
