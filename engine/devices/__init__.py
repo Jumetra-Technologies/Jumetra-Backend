@@ -11,7 +11,6 @@ from .base import (
     capabilities_for,
 )
 from .device_manager import DeviceManager, UnknownDeviceError, UnknownVirtualDeviceError
-from .device_identity import DeviceIdentityClaim
 from .registry import Device, DeviceMode, DeviceRegistry, DeviceStatus
 from .virtual import VirtualButton, VirtualDevice, VirtualLED
 
@@ -22,7 +21,6 @@ __all__ = [
     "Device",
     "DeviceLifecycleEvent",
     "DeviceManager",
-    "DeviceIdentityClaim",
     "DeviceMode",
     "DeviceRegistry",
     "DeviceStatus",

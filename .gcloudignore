@@ -1,0 +1,13 @@
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+functions/
+venv/
+.venv/
+tests/
+docs/
+examples/
+data/firmware/
+data/projects/
+*.md

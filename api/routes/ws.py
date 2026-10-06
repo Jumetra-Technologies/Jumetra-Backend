@@ -9,6 +9,7 @@ from typing import Any, Callable
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from engine.events.dashboard_publisher import DashboardEvent, DashboardEventPublisher
+from security.websocket_auth import authenticate_websocket
 
 router = APIRouter(tags=["websocket"])
 
@@ -59,6 +60,9 @@ class WebSocketEventBridge:
 @router.websocket("/ws/discovery")
 async def websocket_discovery(websocket: WebSocket) -> None:
     """Live hardware discovery stream — pushes device list on hot-plug changes."""
+    if not authenticate_websocket(websocket):
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     service = websocket.app.state.discovery_service
     loop = asyncio.get_running_loop()
@@ -85,6 +89,9 @@ async def websocket_discovery(websocket: WebSocket) -> None:
 
 @router.websocket("/ws/events")
 async def websocket_events(websocket: WebSocket) -> None:
+    if not authenticate_websocket(websocket):
+        await websocket.close(code=1008)
+        return
     bridge: WebSocketEventBridge = websocket.app.state.ws_bridge
     await bridge.connect(websocket)
     try:
@@ -97,6 +104,9 @@ async def websocket_events(websocket: WebSocket) -> None:
 @router.websocket("/ws/hardware")
 async def websocket_hardware(websocket: WebSocket) -> None:
     """Sprint 29 — live hardware node / digital twin stream."""
+    if not authenticate_websocket(websocket):
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     service = websocket.app.state.workspace_hardware_service
     sync = service.sync
@@ -136,6 +146,9 @@ async def websocket_hardware(websocket: WebSocket) -> None:
 @router.websocket("/ws/wiring")
 async def websocket_wiring(websocket: WebSocket) -> None:
     """Sprint 30 — live wire / pin connection stream."""
+    if not authenticate_websocket(websocket):
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     service = websocket.app.state.workspace_wiring_service
     manager = service.manager
@@ -175,6 +188,9 @@ async def websocket_wiring(websocket: WebSocket) -> None:
 @router.websocket("/ws/firmware")
 async def websocket_firmware(websocket: WebSocket) -> None:
     """Sprint 31 — firmware build / upload / serial / GPIO debug stream."""
+    if not authenticate_websocket(websocket):
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     service = websocket.app.state.firmware_service
     loop = asyncio.get_running_loop()
@@ -217,6 +233,9 @@ async def websocket_firmware(websocket: WebSocket) -> None:
 @router.websocket("/ws/workspace/{workspace_id}")
 async def websocket_workspace(websocket: WebSocket, workspace_id: str) -> None:
     """Sprint 26 alias — engineering workspace realtime stream."""
+    if not authenticate_websocket(websocket):
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     service = websocket.app.state.engineering_workspace_service
     try:

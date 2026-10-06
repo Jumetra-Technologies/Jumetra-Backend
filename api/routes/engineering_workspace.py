@@ -8,6 +8,7 @@ workspace API surface.
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
+from security.websocket_auth import authenticate_websocket
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/engineering/workspace", tags=["engineering-workspace"])
@@ -256,6 +257,9 @@ def send_serial(workspace_id: str, body: SerialRequest, request: Request) -> dic
 @router.websocket("/ws/{workspace_id}")
 async def workspace_ws(websocket: WebSocket, workspace_id: str) -> None:
     """Realtime workspace stream — polls state without modifying Event Bus."""
+    if not authenticate_websocket(websocket):
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     service = websocket.app.state.engineering_workspace_service
     try:
