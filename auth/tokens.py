@@ -27,14 +27,13 @@ def session_secret(data_dir: Path) -> str:
     return value
 
 
-def issue_access(user_id: str, secret: str) -> tuple[str, str, datetime]:
+def issue_access(user_id: str, secret: str, *, client: str = "web", device_id: str | None = None) -> tuple[str, str, datetime]:
     jti = secrets.token_hex(16)
     expires = datetime.now(timezone.utc) + ACCESS_TTL
-    token = jwt.encode(
-        {"sub": user_id, "jti": jti, "exp": expires, "typ": "access"},
-        secret,
-        algorithm="HS256",
-    )
+    claims: dict = {"sub": user_id, "jti": jti, "exp": expires, "typ": "access", "client": client}
+    if device_id:
+        claims["device"] = device_id
+    token = jwt.encode(claims, secret, algorithm="HS256")
     return token, jti, expires
 
 
