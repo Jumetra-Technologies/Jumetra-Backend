@@ -6,9 +6,14 @@ import json
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
+from starlette.websockets import WebSocketDisconnect
 
 from api.main import create_app
+from api.db.models import User
 from api.seed import seed_experiments
+from auth.tokens import issue_websocket_ticket
+from database.models import WebSocketTicket
 from engine.events.dashboard_publisher import DashboardEventType
 
 
@@ -29,6 +34,35 @@ def _receive_until(ws, event_type: str, max_reads: int = 30) -> dict:
 
 
 class TestWebSocketEvents:
+
+    def test_websocket_ticket_is_one_use(self, client):
+        client.app.state.require_auth = True
+        with client.app.state.db_factory() as session:
+            user = session.scalar(select(User))
+            assert user is not None
+            ticket, jti, expires = issue_websocket_ticket(
+                user.id,
+                client.app.state.session_secret,
+            )
+            session.add(WebSocketTicket(jti=jti, user_id=user.id, expires_at=expires))
+            session.commit()
+
+        url = f"/ws/events?ticket={ticket}"
+        headers = {"origin": "https://hhipsystemv0.web.app"}
+        with client.websocket_connect(url, headers=headers):
+            pass
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(url, headers=headers):
+                pass
+    def test_websocket_rejects_missing_ticket_in_production_mode(self, client):
+        client.app.state.require_auth = True
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(
+                "/ws/events",
+                headers={"origin": "https://hhipsystemv0.web.app"},
+            ):
+                pass
+
     def test_websocket_receives_published_event(self, client):
         publisher = client.app.state.publisher
         with client.websocket_connect("/ws/events") as ws:

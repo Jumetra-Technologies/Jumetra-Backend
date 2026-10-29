@@ -7,7 +7,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
 
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,9 +16,14 @@ from engine.discovery.service import HardwareDiscoveryService
 from engine.events.event_bus import EventBus
 from engine.devices.device_manager import DeviceManager
 
+from auth.firebase import init_firebase
+from auth.account_routes import router as account_router
+from auth.routes import router as auth_router
+from auth.tokens import session_secret
+from database import ensure_identity_schema
+
 from .db import init_db
 from .routes.analytics import router as analytics_router
-from .routes.auth import router as auth_router
 from .routes.components import router as components_router
 from .routes.components_v2 import router as components_v2_router
 from .routes.controllers import router as controllers_router
@@ -28,9 +32,9 @@ from .routes.discovery import router as discovery_router
 from .routes.engineering_workspace import router as engineering_workspace_router
 from .routes.experiments import router as experiments_router
 from .routes.hybrid import router as hybrid_router
+from .routes.jobs import router as jobs_router
 from .routes.laboratory import router as laboratory_router
 from .routes.firmware import router as firmware_router
-from .routes.jobs import router as jobs_router
 from .routes.workspace import router as workspace_router
 from .routes.workspace_hardware import router as workspace_hardware_router
 from .routes.workspace_connections import router as workspace_connections_router
@@ -42,14 +46,13 @@ from .services.discovery_service import DiscoveryService
 from .services.engineering_workspace_service import EngineeringWorkspaceService
 from .services.experiment_service import ExperimentService
 from .services.hybrid_service import HybridService
-from .services.laboratory_service import LaboratoryService
 from .services.job_scheduler import JobScheduler
+from .services.laboratory_service import LaboratoryService
 from .services.workspace_hardware_service import WorkspaceHardwareService
 from .services.workspace_wiring_service import WorkspaceWiringService
 from .services.workspace_service import WorkspaceService
 from engine.firmware import FirmwareStudioService
-
-load_dotenv()
+from security.auth_middleware import AuthenticatedWriteMiddleware
 
 
 def _default_data_dir() -> Path:
@@ -62,7 +65,21 @@ def _default_data_dir() -> Path:
 def _cors_origins() -> list[str]:
     configured = os.environ.get("HHIP_CORS_ORIGINS", "")
     origins = [origin.strip() for origin in configured.split(",") if origin.strip()]
-    return origins or ["http://localhost:3000", "http://127.0.0.1:3000"]
+    return origins or [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "https://hhipsystemv0.web.app",
+        "https://hhipsystemv0.firebaseapp.com",
+    ]
+
+
+def _cors_origin_regex() -> str:
+    return (
+        r"https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?|"
+        r"https://[a-z0-9.-]+\.(web\.app|firebaseapp\.com|hosted\.app|run\.app)"
+    )
 
 
 @asynccontextmanager
@@ -79,7 +96,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         scan_interval_s=2.0,
     )
     discovery_service = DiscoveryService(discovery_inner)
-    discovery_service.start()
+    if os.environ.get("HHIP_DISABLE_DISCOVERY", "").lower() not in {"1", "true", "yes"}:
+        discovery_service.start()
 
     app.state.job_scheduler = JobScheduler(max_workers=2, max_queued=8)
     app.state.data_service = DataService(data_dir)
@@ -89,6 +107,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         dedupe_key="experiment-summary-index",
     )
     app.state.db_factory = init_db(data_dir)
+    ensure_identity_schema(app.state.db_factory)
+    init_firebase()
+    app.state.session_secret = session_secret(data_dir)
     app.state.publisher = publisher
     app.state.event_bus = event_bus
     app.state.device_manager = device_manager
@@ -137,23 +158,36 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
         version="3.0.0",
         lifespan=lifespan,
     )
-    app.state.data_dir = Path(data_dir) if data_dir is not None else _default_data_dir()
-    app.state.db_factory = init_db(app.state.data_dir)
-    app.state.publisher = DashboardEventPublisher()
-    app.state.event_bus = EventBus()
-    app.state.device_manager = DeviceManager()
-    app.state.device_manager.bind_event_bus(app.state.event_bus)
+    if data_dir is not None:
+        app.state.data_dir = Path(data_dir)
+
+    allowed_origins = _cors_origins()
+    origin_pattern = _cors_origin_regex()
+    app.state.allowed_origins = allowed_origins
+    app.state.origin_pattern = origin_pattern
+    app.state.require_auth = os.environ.get("HHIP_REQUIRE_AUTH", "true").lower() not in {
+        "0",
+        "false",
+        "no",
+    }
 
     app.add_middleware(
+        AuthenticatedWriteMiddleware,
+        enabled=app.state.require_auth,
+        allowed_origins=allowed_origins,
+        origin_pattern=origin_pattern,
+    )
+    app.add_middleware(
         CORSMiddleware,
-        allow_origins=_cors_origins(),
-        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?",
+        allow_origins=allowed_origins,
+        allow_origin_regex=origin_pattern,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     app.include_router(auth_router)
+    app.include_router(account_router)
     app.include_router(experiments_router)
     app.include_router(devices_router)
     app.include_router(analytics_router)

@@ -1,0 +1,25 @@
+{
+  "functions": [
+    {
+      "source": ".",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "venv",
+        ".venv",
+        "functions",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local",
+        "tests",
+        "docs",
+        "examples",
+        "data/firmware",
+        "**/__pycache__",
+        "**/*.pyc"
+      ],
+      "runtime": "python312"
+    }
+  ]
+}
