@@ -63,17 +63,66 @@ def credential_path() -> Path:
     return candidates[0]
 
 
-def init_firebase() -> None:
+_available = False
+_PROVIDERS = {"google": "google.com", "github": "github.com"}
+
+
+def init_firebase() -> bool:
+    """Initialize the Firebase Admin SDK if credentials are present.
+
+    Returns True when sign-in can verify tokens. Without credentials the server
+    still starts (local development, tests, CI); the sign-in routes answer 503.
+    """
+    global _available
     load_auth_env()
     try:
         firebase_admin.get_app()
-        return
+        _available = True
+        return True
     except ValueError:
         pass
     path = credential_path()
     if not path.is_file():
-        raise FileNotFoundError(f"Firebase admin credentials not found: {path}")
+        _available = False
+        return False
     firebase_admin.initialize_app(credentials.Certificate(str(path)))
+    _available = True
+    return True
+
+
+def firebase_available() -> bool:
+    return _available
+
+
+def verify_id_token(token: str) -> dict:
+    """Verify a Firebase ID token. Tests replace this function."""
+    if not _available:
+        raise FirebaseUnavailable("Sign-in isn't set up on this server yet.")
+    return firebase_auth.verify_id_token(token)
+
+
+class FirebaseUnavailable(RuntimeError):
+    pass
+
+
+def provider_claim(provider: str) -> str:
+    """The Firebase sign_in_provider value for a Kiungo provider name."""
+    try:
+        return _PROVIDERS[provider]
+    except KeyError as exc:
+        raise ValueError(f"Unknown sign-in provider: {provider}") from exc
+
+
+def token_providers(claims: dict) -> list[str]:
+    """Every Kiungo provider present in the token's identities, plus the one it signed in with."""
+    firebase = claims.get("firebase") or {}
+    identities = firebase.get("identities") or {}
+    found = [name for name, claim in _PROVIDERS.items() if identities.get(claim)]
+    signed_in = firebase.get("sign_in_provider")
+    for name, claim in _PROVIDERS.items():
+        if claim == signed_in and name not in found:
+            found.append(name)
+    return found
 
 
 def _env_web_config() -> dict[str, str] | None:
@@ -121,7 +170,12 @@ def firebase_web_config() -> dict[str, str]:
     if _web_config is not None:
         return _web_config
     load_auth_env()
-    _web_config = _env_web_config() or _fetch_web_config()
+    config = _env_web_config()
+    if config is None:
+        if not credential_path().is_file():
+            raise FirebaseUnavailable("Sign-in isn't set up on this server yet.")
+        config = _fetch_web_config()
+    _web_config = config
     return _web_config
 
 

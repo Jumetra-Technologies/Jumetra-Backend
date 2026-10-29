@@ -14,12 +14,17 @@ from api.db.models import Organization, User
 from .models import (
     AccessToken,
     CookieSession,
+    LabSessionRecord,
     LoginSession,
     OAuthAccount,
     RefreshToken,
     UserProfile,
+    UserProject,
+    UserProjectExperiment,
     WebSocketTicket,
 )
+
+PROVIDERS = ("google", "github")
 
 _USER_COLUMNS = {
     "firebase_uid": "ALTER TABLE users ADD COLUMN firebase_uid VARCHAR(128)",
@@ -54,21 +59,61 @@ def default_organization(session: Session) -> Organization:
     return org
 
 
-def upsert_google_user(
+class ProviderConflict(Exception):
+    """The provider identity already belongs to another account."""
+
+
+class EmailTaken(Exception):
+    """An account with this email exists, and this sign-in's email isn't verified."""
+
+
+def _find_by_provider(session: Session, provider: str, provider_user_id: str) -> OAuthAccount | None:
+    return session.scalar(
+        select(OAuthAccount).where(
+            OAuthAccount.provider == provider,
+            OAuthAccount.provider_user_id == provider_user_id,
+        )
+    )
+
+
+def _profile_for(session: Session, user: User) -> UserProfile:
+    profile = session.scalar(select(UserProfile).where(UserProfile.user_id == user.id))
+    if profile is None:
+        profile = UserProfile(user_id=user.id)
+        session.add(profile)
+        session.flush()
+    return profile
+
+
+def upsert_provider_user(
     session: Session,
     *,
+    provider: str,
     email: str,
+    email_verified: bool,
     name: str,
     picture: str | None,
-    google_sub: str,
+    provider_user_id: str,
     firebase_uid: str | None,
 ) -> User:
+    """Create or resume the account for a verified Firebase sign-in.
+
+    Continuity, in order: the provider identity, the Firebase UID, then a
+    verified email. An unverified email never merges into an existing account.
+    """
+    if provider not in PROVIDERS:
+        raise ValueError(f"Unknown provider: {provider}")
     user = None
-    if firebase_uid:
+    linked = _find_by_provider(session, provider, provider_user_id)
+    if linked is not None:
+        user = session.get(User, linked.user_id)
+    if user is None and firebase_uid:
         user = session.scalar(select(User).where(User.firebase_uid == firebase_uid))
-    if user is None:
+    if user is None and email_verified:
         user = session.scalar(select(User).where(User.email == email))
     if user is None:
+        if session.scalar(select(User.id).where(User.email == email)) is not None:
+            raise EmailTaken(email)
         org = default_organization(session)
         user = User(
             email=email,
@@ -81,35 +126,77 @@ def upsert_google_user(
         session.add(user)
         session.flush()
     else:
-        user.display_name = name or user.display_name
-        if picture:
+        if name and not user.display_name:
+            user.display_name = name
+        if picture and not user.photo_url:
             user.photo_url = picture
         if firebase_uid and not user.firebase_uid:
             user.firebase_uid = firebase_uid
     user.last_login_at = datetime.now(timezone.utc)
 
-    profile = session.scalar(select(UserProfile).where(UserProfile.user_id == user.id))
-    if profile is None:
-        session.add(UserProfile(user_id=user.id, avatar_url=picture))
-    elif picture:
+    profile = _profile_for(session, user)
+    if picture and not profile.avatar_url:
         profile.avatar_url = picture
+    if email_verified:
+        profile.email_verified = True
+    profile.auth_provider = provider
 
-    oauth = session.scalar(
-        select(OAuthAccount).where(
-            OAuthAccount.provider == "google",
-            OAuthAccount.provider_user_id == google_sub,
-        )
-    )
-    if oauth is None:
+    if linked is None:
         session.add(
             OAuthAccount(
                 user_id=user.id,
-                provider="google",
-                provider_user_id=google_sub,
+                provider=provider,
+                provider_user_id=provider_user_id,
                 email=email,
             )
         )
     return user
+
+
+def link_provider(
+    session: Session,
+    user: User,
+    *,
+    provider: str,
+    provider_user_id: str,
+    email: str | None,
+) -> None:
+    """Attach a second sign-in method to an existing account."""
+    existing = _find_by_provider(session, provider, provider_user_id)
+    if existing is not None:
+        if existing.user_id != user.id:
+            raise ProviderConflict(f"That {provider} account is already connected to another Kiungo account.")
+        return
+    session.add(OAuthAccount(user_id=user.id, provider=provider, provider_user_id=provider_user_id, email=email))
+
+
+def linked_providers(session: Session, user_id: str) -> list[str]:
+    rows = session.scalars(select(OAuthAccount.provider).where(OAuthAccount.user_id == user_id)).all()
+    return [p for p in PROVIDERS if p in rows]
+
+
+def delete_user(session: Session, user: User) -> None:
+    """Remove the person and everything stored under their account."""
+    user_id = user.id
+    for model in (UserProjectExperiment,):
+        for row in session.scalars(
+            select(model).join(UserProject, UserProject.id == model.project_id).where(UserProject.owner_id == user_id)
+        ):
+            session.delete(row)
+    for model, col in (
+        (UserProject, UserProject.owner_id),
+        (LabSessionRecord, LabSessionRecord.owner_id),
+        (OAuthAccount, OAuthAccount.user_id),
+        (UserProfile, UserProfile.user_id),
+        (RefreshToken, RefreshToken.user_id),
+        (AccessToken, AccessToken.user_id),
+        (CookieSession, CookieSession.user_id),
+        (LoginSession, LoginSession.user_id),
+        (WebSocketTicket, WebSocketTicket.user_id),
+    ):
+        for row in session.scalars(select(model).where(col == user_id)):
+            session.delete(row)
+    session.delete(user)
 
 
 def create_login_records(
@@ -223,12 +310,30 @@ def revoke_user_sessions(session: Session, user_id: str) -> None:
         row.ended_at = now
 
 
-def user_payload(user: User) -> dict[str, Any]:
+def user_payload(user: User, session: Session | None = None) -> dict[str, Any]:
+    """The user as the website reads it (docs/accounts-and-profile.md in jumetra-frontend)."""
+    profile = None
+    providers: list[str] = []
+    if session is not None:
+        profile = session.scalar(select(UserProfile).where(UserProfile.user_id == user.id))
+        providers = linked_providers(session, user.id)
+    self_role = profile.self_role if profile else None
     return {
         "id": user.id,
         "email": user.email,
+        "email_verified": bool(profile.email_verified) if profile else False,
         "name": user.display_name,
+        "display_name": user.display_name,
         "photo_url": user.photo_url,
-        "role": user.role,
+        "picture_url": user.photo_url,
         "firebase_uid": user.firebase_uid,
+        "auth_provider": (profile.auth_provider if profile else None) or (providers[0] if providers else None),
+        "linked_providers": providers,
+        "role": self_role,
+        "role_other": profile.role_other if profile else None,
+        "profile_complete": bool(self_role) and (self_role != "other" or bool(profile and profile.role_other)),
+        "platform_role": user.role,
+        "organization": profile.organization if profile else None,
+        "location": profile.location if profile else None,
+        "bio": profile.bio if profile else None,
     }

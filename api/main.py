@@ -17,6 +17,7 @@ from engine.events.event_bus import EventBus
 from engine.devices.device_manager import DeviceManager
 
 from auth.firebase import init_firebase
+from auth.account_routes import router as account_router
 from auth.routes import router as auth_router
 from auth.tokens import session_secret
 from database import ensure_identity_schema
@@ -31,6 +32,7 @@ from .routes.discovery import router as discovery_router
 from .routes.engineering_workspace import router as engineering_workspace_router
 from .routes.experiments import router as experiments_router
 from .routes.hybrid import router as hybrid_router
+from .routes.jobs import router as jobs_router
 from .routes.laboratory import router as laboratory_router
 from .routes.firmware import router as firmware_router
 from .routes.workspace import router as workspace_router
@@ -44,6 +46,7 @@ from .services.discovery_service import DiscoveryService
 from .services.engineering_workspace_service import EngineeringWorkspaceService
 from .services.experiment_service import ExperimentService
 from .services.hybrid_service import HybridService
+from .services.job_scheduler import JobScheduler
 from .services.laboratory_service import LaboratoryService
 from .services.workspace_hardware_service import WorkspaceHardwareService
 from .services.workspace_wiring_service import WorkspaceWiringService
@@ -96,7 +99,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if os.environ.get("HHIP_DISABLE_DISCOVERY", "").lower() not in {"1", "true", "yes"}:
         discovery_service.start()
 
+    app.state.job_scheduler = JobScheduler(max_workers=2, max_queued=8)
     app.state.data_service = DataService(data_dir)
+    app.state.job_scheduler.submit(
+        "experiment_summary_refresh",
+        app.state.data_service.refresh_experiment_summary_cache,
+        dedupe_key="experiment-summary-index",
+    )
     app.state.db_factory = init_db(data_dir)
     ensure_identity_schema(app.state.db_factory)
     init_firebase()
@@ -135,8 +144,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         force_dry_run=os.environ.get("HHIP_FIRMWARE_DRY_RUN", "").lower() in ("1", "true", "yes"),
     )
     app.state.ws_bridge = WebSocketEventBridge(publisher)
-    yield
-    discovery_service.stop()
+    try:
+        yield
+    finally:
+        discovery_service.stop()
+        app.state.job_scheduler.shutdown()
 
 
 def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
@@ -175,6 +187,7 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
     )
 
     app.include_router(auth_router)
+    app.include_router(account_router)
     app.include_router(experiments_router)
     app.include_router(devices_router)
     app.include_router(analytics_router)
@@ -182,6 +195,7 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
     app.include_router(workspace_hardware_router)
     app.include_router(workspace_connections_router)
     app.include_router(firmware_router)
+    app.include_router(jobs_router)
     app.include_router(components_router)
     app.include_router(components_v2_router)
     app.include_router(controllers_router)

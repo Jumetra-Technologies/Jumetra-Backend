@@ -20,6 +20,7 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         if request.url.path in {
             "/auth/google",
+            "/auth/github",
             "/auth/refresh",
             "/auth/logout",
             "/auth/ws-ticket",

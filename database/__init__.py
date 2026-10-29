@@ -1,14 +1,27 @@
-from .models import AccessToken, CookieSession, LoginSession, OAuthAccount, RefreshToken, UserProfile
-from .service import ensure_identity_schema, upsert_google_user, user_payload
+from .models import (
+    AccessToken,
+    CookieSession,
+    LabSessionRecord,
+    LoginSession,
+    OAuthAccount,
+    RefreshToken,
+    UserProfile,
+    UserProject,
+    UserProjectExperiment,
+)
+from .service import ensure_identity_schema, upsert_provider_user, user_payload
 
 __all__ = [
     "AccessToken",
     "CookieSession",
+    "LabSessionRecord",
     "LoginSession",
     "OAuthAccount",
     "RefreshToken",
     "UserProfile",
+    "UserProject",
+    "UserProjectExperiment",
     "ensure_identity_schema",
-    "upsert_google_user",
+    "upsert_provider_user",
     "user_payload",
 ]

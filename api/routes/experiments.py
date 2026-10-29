@@ -3,15 +3,32 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 
+from ..services.job_scheduler import JobQueueFull
 from ..schemas import ExperimentDetail, ExperimentStartRequest, ExperimentStatusResponse, ExperimentSummary
 
 router = APIRouter(prefix="/experiments", tags=["experiments"])
 
 
 @router.get("", response_model=list[ExperimentSummary])
-def list_experiments(request: Request) -> list[ExperimentSummary]:
-    return request.app.state.data_service.list_experiments()
+def list_experiments(request: Request, response: Response) -> list[ExperimentSummary]:
+    data_service = request.app.state.data_service
+    cached = data_service.get_cached_experiment_summaries()
+    stale = data_service.experiment_summary_cache_is_stale()
+    if stale:
+        response.headers["X-HHIP-Data-Status"] = "refreshing"
+        try:
+            request.app.state.job_scheduler.submit(
+                "experiment_summary_refresh",
+                data_service.refresh_experiment_summary_cache,
+                dedupe_key="experiment-summary-index",
+            )
+        except JobQueueFull:
+            response.headers["X-HHIP-Data-Status"] = "stale"
+    else:
+        response.headers["X-HHIP-Data-Status"] = "fresh"
+    return cached or []
 
 
 @router.post("/start", response_model=ExperimentStatusResponse)

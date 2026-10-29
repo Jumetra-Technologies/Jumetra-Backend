@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import threading
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -50,6 +52,29 @@ class DataService:
     def __init__(self, base_dir: Path | str = "data") -> None:
         self.storage = StorageManager(base_dir)
         self.base_dir = Path(base_dir)
+        self._experiment_summary_cache: list[ExperimentSummary] | None = None
+        self._experiment_summary_cached_at = 0.0
+        self._experiment_summary_cache_lock = threading.Lock()
+
+    def get_cached_experiment_summaries(self) -> list[ExperimentSummary] | None:
+        with self._experiment_summary_cache_lock:
+            if self._experiment_summary_cache is None:
+                return None
+            return list(self._experiment_summary_cache)
+
+    def experiment_summary_cache_is_stale(self, max_age_seconds: float = 10.0) -> bool:
+        with self._experiment_summary_cache_lock:
+            return (
+                self._experiment_summary_cache is None
+                or time.monotonic() - self._experiment_summary_cached_at >= max_age_seconds
+            )
+
+    def refresh_experiment_summary_cache(self) -> dict[str, int]:
+        summaries = self.list_experiments()
+        with self._experiment_summary_cache_lock:
+            self._experiment_summary_cache = summaries
+            self._experiment_summary_cached_at = time.monotonic()
+        return {"experiment_count": len(summaries)}
 
     def list_experiment_ids(self) -> list[str]:
         root = self.storage.experiments_dir

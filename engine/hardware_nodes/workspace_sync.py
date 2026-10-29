@@ -46,6 +46,16 @@ class WorkspaceSyncService:
     - Update pin states and heartbeat
     - Reconnect after restart (or show Waiting for hardware)
     - Persist into project.json / hardware store
+
+    WAITING vs OFFLINE (see NODE_RECONCILIATION_SPEC.md):
+    - WAITING: an auto-detected loss (unplug, timeout). remove_device() is
+      the path for this. Background reconnect() sweeps keep trying to
+      match this node against newly-seen devices.
+    - OFFLINE: a deliberate user disconnect. disable_device() is the path
+      for this (used by the /workspace/hardware/disconnect route via
+      disconnect_node()). Background reconnect() sweeps skip this node —
+      it stays off until the user explicitly reconnects that specific
+      device_id, which clears the disabled flag.
     """
 
     def __init__(
@@ -174,6 +184,7 @@ class WorkspaceSyncService:
             node.status = HardwareNodeStatus.ONLINE
             node.available = True
             node.health = "ok"
+            node.manually_disabled = False  # a device reporting in overrides any prior disable
             node.touch_heartbeat()
             self._nodes[node.device_id] = node
             self._persist(ws_id)
@@ -199,12 +210,15 @@ class WorkspaceSyncService:
         return node
 
     def remove_device(self, device_id: str) -> Optional[HardwareNode]:
+        """
+        Auto-detected loss (unplug, timeout). Node goes WAITING, not
+        OFFLINE — background reconnect() sweeps will keep trying to match
+        it. For a deliberate user disconnect, use disable_device() instead.
+        """
         with self._lock:
             node = self._nodes.get(device_id)
             if node is None:
                 return None
-            node.mark_offline()
-            # Keep node in waiting state for reconnect UX (persistence)
             node.mark_waiting()
             ws_id = node.workspace_id
             self._persist(ws_id)
@@ -213,6 +227,27 @@ class WorkspaceSyncService:
         self._broadcast(WorkspaceEventType.BOARD_DISCONNECTED, payload)
         self._broadcast(WorkspaceEventType.NODE_REMOVED, payload)
         self._broadcast(WorkspaceEventType.WORKSPACE_NODE_REMOVED, payload)
+        return node
+
+    def disable_device(self, device_id: str) -> Optional[HardwareNode]:
+        """
+        Deliberate user disconnect (the /workspace/hardware/disconnect
+        route, via disconnect_node()). Node goes OFFLINE and is excluded
+        from background reconnect() sweeps until the user explicitly
+        reconnects this specific device_id again.
+        """
+        with self._lock:
+            node = self._nodes.get(device_id)
+            if node is None:
+                return None
+            node.mark_offline()
+            node.manually_disabled = True
+            ws_id = node.workspace_id
+            self._persist(ws_id)
+            payload = node.to_dict()
+
+        self._broadcast(WorkspaceEventType.BOARD_DISCONNECTED, payload)
+        self._broadcast(WorkspaceEventType.NODE_UPDATED, payload)
         return node
 
     def hard_remove(self, device_id: str) -> bool:
@@ -321,6 +356,13 @@ class WorkspaceSyncService:
         """
         Attempt to bring waiting nodes online using currently connected hybrid devices.
         Missing hardware stays in Waiting for hardware.
+
+        Nodes marked manually_disabled (an explicit user disconnect via
+        disable_device()) are skipped during a bulk sweep (device_id="")
+        so they don't silently come back online behind the user's back.
+        Passing an explicit device_id for a disabled node overrides this —
+        that's the user asking for that specific device back — and clears
+        the disabled flag.
         """
         hybrid_devices = hybrid_devices or []
         by_id = {str(d.get("device_id") or ""): d for d in hybrid_devices}
@@ -328,10 +370,19 @@ class WorkspaceSyncService:
 
         reconnected: list[str] = []
         waiting: list[str] = []
+        skipped_disabled: list[str] = []
 
         with self._lock:
-            targets = [self._nodes[device_id]] if device_id and device_id in self._nodes else list(self._nodes.values())
+            explicit_target = bool(device_id and device_id in self._nodes)
+            targets = [self._nodes[device_id]] if explicit_target else list(self._nodes.values())
             for node in targets:
+                if node.manually_disabled:
+                    if not explicit_target:
+                        skipped_disabled.append(node.device_id)
+                        continue
+                    # Explicit ask for this device overrides the disable.
+                    node.manually_disabled = False
+
                 match = by_id.get(node.device_id) or by_endpoint.get(node.endpoint)
                 if match:
                     node.status = HardwareNodeStatus.ONLINE
@@ -364,11 +415,13 @@ class WorkspaceSyncService:
         return {
             "reconnected": reconnected,
             "waiting": waiting,
+            "skipped_disabled": skipped_disabled,
             "nodes": self.list_nodes(),
         }
 
     def disconnect_node(self, device_id: str) -> dict[str, Any]:
-        node = self.remove_device(device_id)
+        """User-initiated disconnect (the API route). Goes OFFLINE, not WAITING."""
+        node = self.disable_device(device_id)
         return {"ok": node is not None, "device_id": device_id, "node": node.to_dict() if node else None}
 
     # ---- Persistence -------------------------------------------------------
@@ -492,9 +545,11 @@ class WorkspaceSyncService:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 self._hydrate(data.get("nodes") or [], wires=data.get("wires") or [])
-                # After restart, mark all as waiting until reconnect
+                # After restart, mark all as waiting until reconnect — but
+                # never touch a node the user deliberately took offline;
+                # that state should survive a restart untouched.
                 for node in self._nodes.values():
-                    if node.status == HardwareNodeStatus.ONLINE:
+                    if node.status == HardwareNodeStatus.ONLINE and not node.manually_disabled:
                         node.mark_waiting()
             except Exception:  # noqa: BLE001
                 logger.exception("failed to load hardware nodes store")
