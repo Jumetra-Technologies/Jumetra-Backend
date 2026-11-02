@@ -228,3 +228,34 @@ class ReleaseFile(Base):
     url: Mapped[str] = mapped_column(String(512), nullable=False)
     sha512: Mapped[str] = mapped_column(String(128), nullable=False)  # base64, as electron-updater writes it
     size: Mapped[int] = mapped_column(nullable=False)
+
+
+class Consent(Base):
+    """What a signed-in person has agreed to share. No row means they haven't been asked."""
+
+    __tablename__ = "consents"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    crash_reports: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    # Where they decided: "desktop 0.6.0", "website".
+    decided_in: Mapped[str] = mapped_column(String(40), default="", nullable=False)
+
+
+class CrashReport(Base):
+    """One crash, sent only with consent. Kept 90 days. No sketch, project or file contents."""
+
+    __tablename__ = "crash_reports"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    # A random id per installation, so repeats from one computer can be grouped. Not linked to an account unless signed in.
+    install_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    app_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    platform: Mapped[str] = mapped_column(String(16), nullable=False)
+    arch: Mapped[str] = mapped_column(String(16), nullable=False)
+    process: Mapped[str] = mapped_column(String(16), nullable=False)  # main | renderer | gpu | utility
+    message: Mapped[str] = mapped_column(String(2000), nullable=False)
+    stack: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False, index=True)

@@ -580,6 +580,103 @@
         "title": "ConnectionPatchRequest",
         "type": "object"
       },
+      "ConsentIn": {
+        "properties": {
+          "crash_reports": {
+            "title": "Crash Reports",
+            "type": "boolean"
+          },
+          "decided_in": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Decided In",
+            "type": "string"
+          }
+        },
+        "required": [
+          "crash_reports"
+        ],
+        "title": "ConsentIn",
+        "type": "object"
+      },
+      "CrashReportIn": {
+        "properties": {
+          "app_version": {
+            "maxLength": 32,
+            "title": "App Version",
+            "type": "string"
+          },
+          "arch": {
+            "enum": [
+              "x64",
+              "arm64",
+              "ia32"
+            ],
+            "title": "Arch",
+            "type": "string"
+          },
+          "consent": {
+            "const": true,
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "install_id": {
+            "maxLength": 64,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Install Id",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "windows",
+              "linux",
+              "macos"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "process": {
+            "enum": [
+              "main",
+              "renderer",
+              "gpu",
+              "utility"
+            ],
+            "title": "Process",
+            "type": "string"
+          },
+          "stack": {
+            "default": "",
+            "maxLength": 32000,
+            "title": "Stack",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent",
+          "install_id",
+          "app_version",
+          "platform",
+          "arch",
+          "process",
+          "message",
+          "occurred_at"
+        ],
+        "title": "CrashReportIn",
+        "type": "object"
+      },
       "CreateProjectRequest": {
         "properties": {
           "board_type": {
@@ -2892,6 +2989,70 @@
         ]
       }
     },
+    "/auth/me/consents": {
+      "get": {
+        "operationId": "get_consents_auth_me_consents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Consents Auth Me Consents Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Consents",
+        "tags": [
+          "crash reports"
+        ]
+      },
+      "put": {
+        "operationId": "put_consents_auth_me_consents_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Consents Auth Me Consents Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Consents",
+        "tags": [
+          "crash reports"
+        ]
+      }
+    },
     "/auth/me/devices": {
       "get": {
         "operationId": "list_devices_auth_me_devices_get",
@@ -4361,6 +4522,49 @@
         "summary": "List Controllers",
         "tags": [
           "controllers"
+        ]
+      }
+    },
+    "/crash-reports": {
+      "post": {
+        "operationId": "post_crash_report_crash_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrashReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Post Crash Report Crash Reports Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Crash Report",
+        "tags": [
+          "crash reports"
         ]
       }
     },
