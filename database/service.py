@@ -4,16 +4,17 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import inspect, select, text, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session, sessionmaker
 
-from api.db.base import Base
 from api.db.enums import Role
 from api.db.models import Organization, User
 
 from .models import (
     AccessToken,
     CookieSession,
+    DesktopAuthCode,
+    Device,
     LabSessionRecord,
     LoginSession,
     OAuthAccount,
@@ -25,25 +26,6 @@ from .models import (
 )
 
 PROVIDERS = ("google", "github")
-
-_USER_COLUMNS = {
-    "firebase_uid": "ALTER TABLE users ADD COLUMN firebase_uid VARCHAR(128)",
-    "photo_url": "ALTER TABLE users ADD COLUMN photo_url VARCHAR(512)",
-    "last_login_at": "ALTER TABLE users ADD COLUMN last_login_at DATETIME",
-}
-
-
-def ensure_identity_schema(factory: sessionmaker[Session]) -> None:
-    engine = factory.kw["bind"]
-    inspector = inspect(engine)
-    if "users" in inspector.get_table_names():
-        existing = {col["name"] for col in inspector.get_columns("users")}
-        with engine.begin() as conn:
-            for name, ddl in _USER_COLUMNS.items():
-                if name not in existing:
-                    conn.execute(text(ddl))
-    Base.metadata.create_all(engine)
-
 
 def hash_token(raw: str) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -190,6 +172,8 @@ def delete_user(session: Session, user: User) -> None:
         (UserProfile, UserProfile.user_id),
         (RefreshToken, RefreshToken.user_id),
         (AccessToken, AccessToken.user_id),
+        (DesktopAuthCode, DesktopAuthCode.user_id),
+        (Device, Device.user_id),
         (CookieSession, CookieSession.user_id),
         (LoginSession, LoginSession.user_id),
         (WebSocketTicket, WebSocketTicket.user_id),

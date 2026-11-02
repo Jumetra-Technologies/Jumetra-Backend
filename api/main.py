@@ -18,9 +18,9 @@ from engine.devices.device_manager import DeviceManager
 
 from auth.firebase import init_firebase
 from auth.account_routes import router as account_router
+from auth.desktop_routes import my_devices_router, router as desktop_router
 from auth.routes import router as auth_router
 from auth.tokens import session_secret
-from database import ensure_identity_schema
 
 from .db import init_db
 from .routes.analytics import router as analytics_router
@@ -107,7 +107,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         dedupe_key="experiment-summary-index",
     )
     app.state.db_factory = init_db(data_dir)
-    ensure_identity_schema(app.state.db_factory)
     init_firebase()
     app.state.session_secret = session_secret(data_dir)
     app.state.publisher = publisher
@@ -188,6 +187,8 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
 
     app.include_router(auth_router)
     app.include_router(account_router)
+    app.include_router(desktop_router)
+    app.include_router(my_devices_router)
     app.include_router(experiments_router)
     app.include_router(devices_router)
     app.include_router(analytics_router)

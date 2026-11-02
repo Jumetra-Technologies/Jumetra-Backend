@@ -1,6 +1,8 @@
 from .models import (
     AccessToken,
     CookieSession,
+    DesktopAuthCode,
+    Device,
     LabSessionRecord,
     LoginSession,
     OAuthAccount,
@@ -9,11 +11,13 @@ from .models import (
     UserProject,
     UserProjectExperiment,
 )
-from .service import ensure_identity_schema, upsert_provider_user, user_payload
+from .service import upsert_provider_user, user_payload
 
 __all__ = [
     "AccessToken",
     "CookieSession",
+    "DesktopAuthCode",
+    "Device",
     "LabSessionRecord",
     "LoginSession",
     "OAuthAccount",
@@ -21,7 +25,6 @@ __all__ = [
     "UserProfile",
     "UserProject",
     "UserProjectExperiment",
-    "ensure_identity_schema",
     "upsert_provider_user",
     "user_payload",
 ]

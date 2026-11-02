@@ -24,6 +24,10 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
             "/auth/refresh",
             "/auth/logout",
             "/auth/ws-ticket",
+            "/auth/desktop/codes",
+            "/auth/desktop/token",
+            "/auth/desktop/refresh",
+            "/auth/desktop/logout",
         }:
             return await call_next(request)
 

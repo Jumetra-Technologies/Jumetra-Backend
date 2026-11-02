@@ -51,6 +51,8 @@ class OAuthAccount(Base):
 
 
 class RefreshToken(Base):
+    """One refresh token. ``client`` is ``web`` or ``desktop``; desktop tokens belong to a device."""
+
     __tablename__ = "refresh_tokens"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
@@ -59,6 +61,8 @@ class RefreshToken(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    client: Mapped[str] = mapped_column(String(16), default="web", nullable=False, server_default="web")
+    device_id: Mapped[Optional[str]] = mapped_column(ForeignKey("devices.id", ondelete="CASCADE"), nullable=True, index=True)
 
 
 class LoginSession(Base):
@@ -93,6 +97,7 @@ class AccessToken(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    device_id: Mapped[Optional[str]] = mapped_column(ForeignKey("devices.id", ondelete="CASCADE"), nullable=True, index=True)
 
 
 class WebSocketTicket(Base):
@@ -153,3 +158,40 @@ class LabSessionRecord(Base):
     client_updated_at: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
+
+
+class Device(Base):
+    """A desktop installation that signed in. Revoking it ends its sessions."""
+
+    __tablename__ = "devices"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    platform: Mapped[str] = mapped_column(String(16), nullable=False)  # windows | linux | macos
+    app_version: Mapped[str] = mapped_column(String(32), default="", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class DesktopAuthCode(Base):
+    """One desktop sign-in attempt: created by the app, approved on the website, exchanged once."""
+
+    __tablename__ = "desktop_auth_codes"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    status: Mapped[str] = mapped_column(String(16), default="pending", nullable=False)  # pending | approved | exchanged | denied | expired
+    code_challenge: Mapped[str] = mapped_column(String(128), nullable=False)
+    code_challenge_method: Mapped[str] = mapped_column(String(8), default="S256", nullable=False)
+    code_hash: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True)  # the one-time code, hashed, set on approval
+    redirect_uri: Mapped[str] = mapped_column(String(256), nullable=False)
+    device_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    device_platform: Mapped[str] = mapped_column(String(16), nullable=False)
+    app_version: Mapped[str] = mapped_column(String(32), default="", nullable=False)
+    user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    device_id: Mapped[Optional[str]] = mapped_column(ForeignKey("devices.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    exchanged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
