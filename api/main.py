@@ -21,6 +21,7 @@ from auth.account_routes import router as account_router
 from auth.desktop_routes import my_devices_router, router as desktop_router
 from api.routes.releases import router as releases_router
 from api.routes.crash_reports import router as crash_reports_router
+from api.routes.projects_sync import router as projects_sync_router
 from auth.routes import router as auth_router
 from auth.tokens import session_secret
 
@@ -193,6 +194,7 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
     app.include_router(my_devices_router)
     app.include_router(releases_router)
     app.include_router(crash_reports_router)
+    app.include_router(projects_sync_router)
     app.include_router(experiments_router)
     app.include_router(devices_router)
     app.include_router(analytics_router)

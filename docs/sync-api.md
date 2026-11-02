@@ -1,6 +1,13 @@
 # Project sync API: design (Phase Two, for sprint 11)
 
-Status: draft for review by Brad (product) and Masden (database and auth). Nothing here is built yet. Sprint 11 builds it (DSK-14), after this design is agreed.
+Status: built in sprint 11 (`api/routes/projects_sync.py`, migration `0005_projects_sync`, tests in `tests/test_projects_sync.py`), as designed below. Masden reviews the tables and the storage choice. Blobs are in PostgreSQL for now (question 2).
+
+Changes from the draft, found while building it:
+
+- **Blobs are per owner** (`file_blobs` is keyed on owner and hash), not shared. With shared blobs, anyone who knew a file's hash could commit it into their own project and read it back. Storage is still shared between one person's projects and revisions.
+- **`POST /{id}/blobs/missing`** takes `{ hashes }` and returns the ones the server doesn't have, so a push uploads only what's new.
+- **`world.json` syncs** too (the robot world, sprint 8). Paths are checked against a fixed pattern: `kiungo.json`, `circuit.json`, `world.json`, `sketch/<file>`, `records/<file>` or `records/<folder>/<file>`.
+- **Old content is collected:** after each commit, blobs that no current file and no kept revision use are deleted. Deleted projects are purged 30 days after deletion, the next time the list is read.
 
 ## What it's for
 
