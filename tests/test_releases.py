@@ -111,3 +111,14 @@ def test_a_release_cannot_be_changed(client):
 def test_bad_releases_are_refused(client, body):
     response = client.post("/releases", json=body, headers={"Authorization": f"Bearer {TOKEN}"})
     assert response.status_code == 422, response.text
+
+
+def test_publishing_works_with_sign_in_enforced(tmp_path, monkeypatch):
+    # Production enforces sign-in on writes; the pipeline has a token, not a session or a website origin.
+    monkeypatch.setenv("HHIP_REQUIRE_AUTH", "true")
+    monkeypatch.setenv("HHIP_DISABLE_DISCOVERY", "1")
+    monkeypatch.setenv("KIUNGO_RELEASE_TOKEN", TOKEN)
+    with TestClient(create_app(data_dir=tmp_path)) as c:
+        assert publish(c, "0.5.0").status_code == 201
+        assert publish(c, "0.5.1", token="wrong").status_code == 401
+        assert c.post("/releases/stable/0.5.0/withdraw", headers={"Authorization": f"Bearer {TOKEN}"}).status_code == 200
