@@ -30,6 +30,9 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
             "/auth/desktop/logout",
         }:
             return await call_next(request)
+        # Routes that check their own credentials: the release pipeline's token (api/routes/releases.py).
+        if request.url.path == "/releases" or request.url.path.startswith("/releases/"):
+            return await call_next(request)
 
         origin = request.headers.get("x-forwarded-origin") or request.headers.get("origin")
         if not is_allowed_origin(origin, self.allowed_origins, self.origin_pattern):

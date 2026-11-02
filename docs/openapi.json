@@ -1724,6 +1724,129 @@
         "title": "RefreshRequest",
         "type": "object"
       },
+      "ReleaseFileIn": {
+        "properties": {
+          "arch": {
+            "enum": [
+              "x64",
+              "arm64"
+            ],
+            "title": "Arch",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "nsis",
+              "dmg",
+              "zip",
+              "appimage",
+              "deb",
+              "rpm"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "windows",
+              "linux",
+              "macos"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "sha512": {
+            "maxLength": 128,
+            "minLength": 86,
+            "title": "Sha512",
+            "type": "string"
+          },
+          "size": {
+            "exclusiveMaximum": 4294967296.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Size",
+            "type": "integer"
+          },
+          "url": {
+            "maxLength": 512,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "platform",
+          "arch",
+          "kind",
+          "url",
+          "sha512",
+          "size"
+        ],
+        "title": "ReleaseFileIn",
+        "type": "object"
+      },
+      "ReleaseIn": {
+        "properties": {
+          "channel": {
+            "default": "stable",
+            "enum": [
+              "stable",
+              "beta"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ReleaseFileIn"
+            },
+            "maxItems": 24,
+            "minItems": 1,
+            "title": "Files",
+            "type": "array"
+          },
+          "minimum_version": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Version"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "version": {
+            "maxLength": 32,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "files"
+        ],
+        "title": "ReleaseIn",
+        "type": "object"
+      },
       "RunRequest": {
         "properties": {
           "speed": {
@@ -7134,6 +7257,232 @@
         "summary": "Start Laboratory",
         "tags": [
           "laboratory"
+        ]
+      }
+    },
+    "/releases": {
+      "post": {
+        "operationId": "publish_release_releases_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Publish Release Releases Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Release",
+        "tags": [
+          "releases"
+        ]
+      }
+    },
+    "/releases/latest": {
+      "get": {
+        "description": "The newest release on a channel that has an installer for this platform and architecture.",
+        "operationId": "latest_release_releases_latest_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "channel",
+            "required": false,
+            "schema": {
+              "default": "stable",
+              "enum": [
+                "stable",
+                "beta"
+              ],
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "windows",
+                    "linux",
+                    "macos"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Platform"
+            }
+          },
+          {
+            "in": "query",
+            "name": "arch",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "x64",
+                    "arm64"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Arch"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Latest Release Releases Latest Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Latest Release",
+        "tags": [
+          "releases"
+        ]
+      }
+    },
+    "/releases/{channel}/{version}/withdraw": {
+      "post": {
+        "description": "Stop offering a release (a bad build). Apps that installed it update to the newest one left.",
+        "operationId": "withdraw_release_releases__channel___version__withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "enum": [
+                "stable",
+                "beta"
+              ],
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Withdraw Release Releases  Channel   Version  Withdraw Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw Release",
+        "tags": [
+          "releases"
         ]
       }
     },

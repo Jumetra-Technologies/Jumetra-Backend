@@ -195,3 +195,36 @@ class DesktopAuthCode(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     exchanged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Release(Base):
+    """A published desktop app version on a channel. Written by the release pipeline, read by the app and the download page."""
+
+    __tablename__ = "releases"
+    __table_args__ = (UniqueConstraint("channel", "version", name="uq_releases_channel_version"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    channel: Mapped[str] = mapped_column(String(16), nullable=False, index=True)  # stable | beta
+    version: Mapped[str] = mapped_column(String(32), nullable=False)
+    notes: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    # Older versions must update before they keep working (a security fix, a broken file format).
+    minimum_version: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    withdrawn_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ReleaseFile(Base):
+    """One installer of a release: a platform, an architecture, and where to download it."""
+
+    __tablename__ = "release_files"
+    __table_args__ = (UniqueConstraint("release_id", "platform", "arch", "kind", name="uq_release_files_target"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    release_id: Mapped[str] = mapped_column(ForeignKey("releases.id", ondelete="CASCADE"), nullable=False, index=True)
+    platform: Mapped[str] = mapped_column(String(16), nullable=False)  # windows | linux | macos
+    arch: Mapped[str] = mapped_column(String(16), nullable=False)  # x64 | arm64
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)  # nsis | dmg | zip | appimage | deb | rpm
+    url: Mapped[str] = mapped_column(String(512), nullable=False)
+    sha512: Mapped[str] = mapped_column(String(128), nullable=False)  # base64, as electron-updater writes it
+    size: Mapped[int] = mapped_column(nullable=False)
