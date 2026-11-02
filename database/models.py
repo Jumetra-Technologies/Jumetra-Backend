@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.db.base import Base
@@ -259,3 +259,59 @@ class CrashReport(Base):
     stack: Mapped[str] = mapped_column(Text, default="", nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False, index=True)
+
+
+class SyncedProject(Base):
+    """A desktop project's copy on the account (DSK-14). The folder on disk is the working copy; this is a backup and a way across."""
+
+    __tablename__ = "synced_projects"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)  # the id in kiungo.json
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    name: Mapped[str] = mapped_column(String(200), default="", nullable=False)
+    board: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    # The server's clock: +1 on every accepted change. Clients send it back in If-Match.
+    revision: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
+
+
+class SyncedFile(Base):
+    """One file of a synced project's current tree."""
+
+    __tablename__ = "synced_files"
+
+    project_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    path: Mapped[str] = mapped_column(String(255), primary_key=True)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    # The project revision that last changed this file.
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class FileBlob(Base):
+    """A file's content, by its SHA-256. Kept per owner, so a hash never gives access to someone else's file."""
+
+    __tablename__ = "file_blobs"
+
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    sha256: Mapped[str] = mapped_column(String(64), primary_key=True)
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ProjectRevision(Base):
+    """The whole tree at one revision, the last 20 per project, so an earlier version can be restored."""
+
+    __tablename__ = "project_revisions"
+
+    project_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    revision: Mapped[int] = mapped_column(Integer, primary_key=True)
+    device: Mapped[str] = mapped_column(String(120), default="", nullable=False)
+    files: Mapped[list] = mapped_column(JSON, nullable=False)  # [{path, sha256}]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

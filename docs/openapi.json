@@ -219,6 +219,25 @@
         "title": "BindingRequest",
         "type": "object"
       },
+      "BlobIn": {
+        "properties": {
+          "base64": {
+            "maxLength": 2796210,
+            "title": "Base64",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sha256",
+          "base64"
+        ],
+        "title": "BlobIn",
+        "type": "object"
+      },
       "BuildRequest": {
         "properties": {
           "project_id": {
@@ -266,6 +285,41 @@
           "device"
         ],
         "title": "CodeRequest",
+        "type": "object"
+      },
+      "CommitIn": {
+        "properties": {
+          "board": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Board",
+            "type": "string"
+          },
+          "device": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Device",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileRef"
+            },
+            "maxItems": 300,
+            "title": "Files",
+            "type": "array"
+          },
+          "name": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "title": "CommitIn",
         "type": "object"
       },
       "ComparisonResult": {
@@ -1244,6 +1298,25 @@
         "title": "ExperimentSummary",
         "type": "object"
       },
+      "FileRef": {
+        "properties": {
+          "path": {
+            "maxLength": 255,
+            "title": "Path",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "title": "FileRef",
+        "type": "object"
+      },
       "FirmwareUploadRequest": {
         "properties": {
           "firmware_path": {
@@ -1274,6 +1347,23 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HashesIn": {
+        "properties": {
+          "hashes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 300,
+            "title": "Hashes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "hashes"
+        ],
+        "title": "HashesIn",
         "type": "object"
       },
       "HighlightRequest": {
@@ -3377,6 +3467,400 @@
         "summary": "Create Project",
         "tags": [
           "account"
+        ]
+      }
+    },
+    "/auth/me/projects-sync": {
+      "get": {
+        "operationId": "list_projects_auth_me_projects_sync_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Projects Auth Me Projects Sync Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Projects",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}": {
+      "delete": {
+        "operationId": "delete_project_auth_me_projects_sync__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete Project Auth Me Projects Sync  Project Id  Delete"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Project",
+        "tags": [
+          "project sync"
+        ]
+      },
+      "get": {
+        "operationId": "get_project_auth_me_projects_sync__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Project Auth Me Projects Sync  Project Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Project",
+        "tags": [
+          "project sync"
+        ]
+      },
+      "put": {
+        "operationId": "commit_project_auth_me_projects_sync__project_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Commit Project Auth Me Projects Sync  Project Id  Put"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Commit Project",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/blobs": {
+      "post": {
+        "operationId": "upload_blobs_auth_me_projects_sync__project_id__blobs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/BlobIn"
+                },
+                "title": "Body",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Upload Blobs Auth Me Projects Sync  Project Id  Blobs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Blobs",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/blobs/missing": {
+      "post": {
+        "operationId": "missing_blobs_auth_me_projects_sync__project_id__blobs_missing_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HashesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Missing Blobs Auth Me Projects Sync  Project Id  Blobs Missing Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Missing Blobs",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/blobs/{sha256}": {
+      "get": {
+        "operationId": "get_blob_auth_me_projects_sync__project_id__blobs__sha256__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sha256",
+            "required": true,
+            "schema": {
+              "title": "Sha256",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Blob",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/restore": {
+      "post": {
+        "operationId": "restore_project_auth_me_projects_sync__project_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Restore Project Auth Me Projects Sync  Project Id  Restore Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Project",
+        "tags": [
+          "project sync"
         ]
       }
     },
