@@ -1,0 +1,108 @@
+name: Deploy the API
+
+# Deploys main to Cloud Functions: the function "api" in europe-west4, project hhipsystemv0
+# (main.py serves api/main.py's app). Production had been deployed by hand from code that
+# isn't in this repository, a cut-down "Kiungo Authentication API", so the website's Hybrid
+# page, component library, desktop sign-in, sync and releases got 404s. Deploying from here
+# keeps production the same as main.
+#
+# Runs after every push to main (once the tests pass), or from the Actions tab.
+# Until GCP_DEPLOY_KEY is set it only says so and deploys nothing.
+#
+# Repository secrets, set by whoever runs the Google Cloud project:
+#   GCP_DEPLOY_KEY         a service-account key (JSON) that may deploy Cloud Functions
+#                          (roles: Cloud Functions Admin, Service Account User, Cloud Build Editor,
+#                          Artifact Registry Writer, Firebase Admin)
+#   FIREBASE_ADMINSDK_JSON the file production uses as credentials/firebase-adminsdk.json
+#   SESSION_SECRET         production's credentials/session.secret. Use the one it has now:
+#                          a new one signs everybody out.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PROJECT: hhipsystemv0
+  API: https://europe-west4-hhipsystemv0.cloudfunctions.net/api
+
+jobs:
+  deploy:
+    name: Test, deploy and check
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      GCP_DEPLOY_KEY: ${{ secrets.GCP_DEPLOY_KEY }}
+      FIREBASE_ADMINSDK_JSON: ${{ secrets.FIREBASE_ADMINSDK_JSON }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      HHIP_DISABLE_DISCOVERY: "1"
+      HHIP_FIRMWARE_DRY_RUN: "1"
+    steps:
+      - name: Deploying isn't set up yet
+        if: env.GCP_DEPLOY_KEY == ''
+        run: echo "::notice::GCP_DEPLOY_KEY isn't set, so nothing was deployed. See the top of .github/workflows/deploy.yml."
+
+      - uses: actions/checkout@v4
+        if: env.GCP_DEPLOY_KEY != ''
+      - uses: actions/setup-python@v5
+        if: env.GCP_DEPLOY_KEY != ''
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Run the tests
+        if: env.GCP_DEPLOY_KEY != ''
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+          python -m pytest -q -p no:cacheprovider --ignore=tests/test_component_registry_performance.py
+
+      - name: Credentials the function reads
+        if: env.GCP_DEPLOY_KEY != ''
+        run: |
+          [ -n "$FIREBASE_ADMINSDK_JSON" ] || { echo "::error::FIREBASE_ADMINSDK_JSON isn't set."; exit 1; }
+          [ -n "$SESSION_SECRET" ] || { echo "::error::SESSION_SECRET isn't set. Use production's current one, or everybody is signed out."; exit 1; }
+          mkdir -p credentials
+          printf '%s' "$FIREBASE_ADMINSDK_JSON" > credentials/firebase-adminsdk.json
+          printf '%s' "$SESSION_SECRET" > credentials/session.secret
+          python -c "import json; json.load(open('credentials/firebase-adminsdk.json'))"
+
+      - name: The virtual environment Firebase deploys Python functions from
+        if: env.GCP_DEPLOY_KEY != ''
+        run: |
+          python -m venv venv
+          venv/bin/pip install -q -r requirements.txt
+
+      - uses: google-github-actions/auth@v2
+        if: env.GCP_DEPLOY_KEY != ''
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_KEY }}
+
+      - uses: actions/setup-node@v4
+        if: env.GCP_DEPLOY_KEY != ''
+        with:
+          node-version: 22
+
+      - name: Deploy
+        if: env.GCP_DEPLOY_KEY != ''
+        run: npx --yes firebase-tools@15.34.0 deploy --only functions --project "$PROJECT" --non-interactive --force
+
+      - name: Check what the website needs is there
+        if: env.GCP_DEPLOY_KEY != ''
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6; do
+            curl -fsS "$API/health" >/dev/null && break
+            sleep 10
+          done
+          curl -fsS "$API/openapi.json" | python -c "import json,sys; t=json.load(sys.stdin)['info']['title']; print(t); assert t == 'HHIP Research Platform API', t"
+          curl -fsS "$API/controllers" | python -c "import json,sys; n=len(json.load(sys.stdin)); print(n, 'boards'); assert n > 0"
+          curl -fsS "$API/components/search" | python -c "import json,sys; n=len(json.load(sys.stdin)); print(n, 'parts'); assert n > 0"
+          curl -fsS "$API/auth/config" >/dev/null
+          echo "Production serves the full API."
