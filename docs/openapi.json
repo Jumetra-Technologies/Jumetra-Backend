@@ -268,6 +268,245 @@
         "title": "CodeRequest",
         "type": "object"
       },
+      "CommunityBreakdown": {
+        "properties": {
+          "other": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CommunityOther"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CommunityRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows",
+          "other"
+        ],
+        "title": "CommunityBreakdown",
+        "type": "object"
+      },
+      "CommunityMonth": {
+        "properties": {
+          "builders": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Builders"
+          },
+          "lab_sessions": {
+            "title": "Lab Sessions",
+            "type": "integer"
+          },
+          "lab_sessions_to_date": {
+            "title": "Lab Sessions To Date",
+            "type": "integer"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "projects": {
+            "title": "Projects",
+            "type": "integer"
+          },
+          "projects_to_date": {
+            "title": "Projects To Date",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "projects",
+          "lab_sessions",
+          "projects_to_date",
+          "lab_sessions_to_date",
+          "builders"
+        ],
+        "title": "CommunityMonth",
+        "type": "object"
+      },
+      "CommunityOther": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "people": {
+            "title": "People",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "people"
+        ],
+        "title": "CommunityOther",
+        "type": "object"
+      },
+      "CommunityPrivacy": {
+        "properties": {
+          "cache_seconds": {
+            "title": "Cache Seconds",
+            "type": "integer"
+          },
+          "min_group": {
+            "title": "Min Group",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "min_group",
+          "cache_seconds"
+        ],
+        "title": "CommunityPrivacy",
+        "type": "object"
+      },
+      "CommunityRow": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "people": {
+            "title": "People",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "count",
+          "people"
+        ],
+        "title": "CommunityRow",
+        "type": "object"
+      },
+      "CommunityStats": {
+        "properties": {
+          "categories": {
+            "$ref": "#/components/schemas/CommunityBreakdown"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "modes": {
+            "$ref": "#/components/schemas/CommunityBreakdown"
+          },
+          "monthly": {
+            "items": {
+              "$ref": "#/components/schemas/CommunityMonth"
+            },
+            "title": "Monthly",
+            "type": "array"
+          },
+          "parts": {
+            "$ref": "#/components/schemas/CommunityBreakdown"
+          },
+          "privacy": {
+            "$ref": "#/components/schemas/CommunityPrivacy"
+          },
+          "project_hardware": {
+            "$ref": "#/components/schemas/CommunityBreakdown"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/CommunityTotals"
+          }
+        },
+        "required": [
+          "generated_at",
+          "totals",
+          "parts",
+          "project_hardware",
+          "categories",
+          "modes",
+          "monthly",
+          "privacy"
+        ],
+        "title": "CommunityStats",
+        "type": "object"
+      },
+      "CommunityTotals": {
+        "properties": {
+          "active_builders_30d": {
+            "title": "Active Builders 30D",
+            "type": "integer"
+          },
+          "builders": {
+            "title": "Builders",
+            "type": "integer"
+          },
+          "experiments": {
+            "title": "Experiments",
+            "type": "integer"
+          },
+          "faults_fixed": {
+            "title": "Faults Fixed",
+            "type": "integer"
+          },
+          "lab_sessions": {
+            "title": "Lab Sessions",
+            "type": "integer"
+          },
+          "modules_completed": {
+            "title": "Modules Completed",
+            "type": "integer"
+          },
+          "parts_placed": {
+            "title": "Parts Placed",
+            "type": "integer"
+          },
+          "projects": {
+            "title": "Projects",
+            "type": "integer"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          },
+          "simulated_hours": {
+            "title": "Simulated Hours",
+            "type": "number"
+          },
+          "wires": {
+            "title": "Wires",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "builders",
+          "active_builders_30d",
+          "projects",
+          "lab_sessions",
+          "experiments",
+          "parts_placed",
+          "wires",
+          "runs",
+          "faults_fixed",
+          "simulated_hours",
+          "modules_completed"
+        ],
+        "title": "CommunityTotals",
+        "type": "object"
+      },
       "ComparisonResult": {
         "properties": {
           "accuracy_difference": {
@@ -3573,6 +3812,28 @@
         "summary": "Create Websocket Ticket",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/community/stats": {
+      "get": {
+        "description": "What everyone has built in Kiungo. Breakdown rows need at least `privacy.min_group` people.",
+        "operationId": "community_stats_route_community_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Community Stats Route",
+        "tags": [
+          "community"
         ]
       }
     },
