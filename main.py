@@ -12,18 +12,18 @@ _SESSION_FILE = _ROOT / "credentials" / "session.secret"
 
 os.environ.setdefault("FIREBASE_CREDENTIALS", str(_CREDENTIALS))
 os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", str(_CREDENTIALS))
-os.environ.setdefault(
-    "HHIP_CORS_ORIGINS",
-    ",".join(
-        [
-            "https://hhipsystemv0.web.app",
-            "https://hhipsystemv0.firebaseapp.com",
-            "https://hhipsystemv0--hhipsystemv0.europe-west4.hosted.app",
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-        ]
-    ),
-)
+# Where the website runs. The browser calls this API directly (signing in, saving, starting
+# experiments), so a site missing here can read nothing and change nothing.
+PRODUCTION_ORIGINS = [
+    "https://kiungo-labs-technologies.vercel.app",
+    "https://jumetra-frontend.vercel.app",
+    "https://hhipsystemv0.web.app",
+    "https://hhipsystemv0.firebaseapp.com",
+    "https://hhipsystemv0--hhipsystemv0.europe-west4.hosted.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+os.environ.setdefault("HHIP_CORS_ORIGINS", ",".join(PRODUCTION_ORIGINS))
 os.environ.setdefault("COOKIE_SECURE", "true")
 os.environ.setdefault("COOKIE_SAMESITE", "none")
 os.environ.setdefault("HHIP_FIRMWARE_DRY_RUN", "1")
