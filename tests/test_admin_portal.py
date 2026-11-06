@@ -257,6 +257,13 @@ def test_the_default_hash_is_the_password_set_on_6_november():
     assert not admin_auth.check_password("Kiungo1.", admin_auth.DEFAULT_HASH)
 
 
+def test_hashes_have_no_dollar_signs_for_the_env_file_and_old_ones_still_work():
+    new = admin_auth.hash_password("x")
+    assert "$" not in new and new.startswith("scrypt:")
+    assert admin_auth.check_password("x", new.replace(":", "$"))
+    assert not admin_auth.check_password("x", "not a hash")
+
+
 # ----- the overview -----
 
 

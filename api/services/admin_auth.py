@@ -38,13 +38,14 @@ MAX_FAILURES_PER_ADDRESS = 5
 MAX_FAILURES_TOTAL = 30
 
 # scrypt of the password set on 6 Nov 2026. Replace it with HHIP_ADMIN_PASSWORD_HASH in production.
-DEFAULT_HASH = "scrypt$16384$8$1$s3SpzibSj99pXUpLRoWnNA==$YKpBHNSvHhBMzWFnusbXn3IjaNXsvsfmn1xVBlMHCoo="
+DEFAULT_HASH = "scrypt:16384:8:1:pefyMlYr3OKNsfoJAA+kSg==:dRmabFtFbfY5MhDG6ZKGAf967g+aAbTdpAA5XlA+zVM="
 
 
 def hash_password(password: str, *, salt: Optional[bytes] = None, n: int = 16384, r: int = 8, p: int = 1) -> str:
     salt = salt or secrets.token_bytes(16)
     digest = hashlib.scrypt(password.encode(), salt=salt, n=n, r=r, p=p, dklen=32)
-    return f"scrypt${n}${r}${p}${base64.b64encode(salt).decode()}${base64.b64encode(digest).decode()}"
+    # Colons, not dollar signs: the hash goes in the function's .env file, where $ would be read as a variable.
+    return f"scrypt:{n}:{r}:{p}:{base64.b64encode(salt).decode()}:{base64.b64encode(digest).decode()}"
 
 
 def password_hash() -> str:
@@ -54,7 +55,7 @@ def password_hash() -> str:
 def check_password(password: str, stored: Optional[str] = None) -> bool:
     stored = stored or password_hash()
     try:
-        scheme, n, r, p, salt, digest = stored.split("$")
+        scheme, n, r, p, salt, digest = stored.replace("$", ":").split(":")
         if scheme != "scrypt":
             return False
         got = hashlib.scrypt(password.encode(), salt=base64.b64decode(salt), n=int(n), r=int(r), p=int(p), dklen=len(base64.b64decode(digest)))
