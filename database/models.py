@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.db.base import Base
@@ -195,3 +195,123 @@ class DesktopAuthCode(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     exchanged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Release(Base):
+    """A published desktop app version on a channel. Written by the release pipeline, read by the app and the download page."""
+
+    __tablename__ = "releases"
+    __table_args__ = (UniqueConstraint("channel", "version", name="uq_releases_channel_version"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    channel: Mapped[str] = mapped_column(String(16), nullable=False, index=True)  # stable | beta
+    version: Mapped[str] = mapped_column(String(32), nullable=False)
+    notes: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    # Older versions must update before they keep working (a security fix, a broken file format).
+    minimum_version: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    withdrawn_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ReleaseFile(Base):
+    """One installer of a release: a platform, an architecture, and where to download it."""
+
+    __tablename__ = "release_files"
+    __table_args__ = (UniqueConstraint("release_id", "platform", "arch", "kind", name="uq_release_files_target"),)
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    release_id: Mapped[str] = mapped_column(ForeignKey("releases.id", ondelete="CASCADE"), nullable=False, index=True)
+    platform: Mapped[str] = mapped_column(String(16), nullable=False)  # windows | linux | macos
+    arch: Mapped[str] = mapped_column(String(16), nullable=False)  # x64 | arm64
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)  # nsis | dmg | zip | appimage | deb | rpm
+    url: Mapped[str] = mapped_column(String(512), nullable=False)
+    sha512: Mapped[str] = mapped_column(String(128), nullable=False)  # base64, as electron-updater writes it
+    size: Mapped[int] = mapped_column(nullable=False)
+
+
+class Consent(Base):
+    """What a signed-in person has agreed to share. No row means they haven't been asked."""
+
+    __tablename__ = "consents"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    crash_reports: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    # Where they decided: "desktop 0.6.0", "website".
+    decided_in: Mapped[str] = mapped_column(String(40), default="", nullable=False)
+
+
+class CrashReport(Base):
+    """One crash, sent only with consent. Kept 90 days. No sketch, project or file contents."""
+
+    __tablename__ = "crash_reports"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    # A random id per installation, so repeats from one computer can be grouped. Not linked to an account unless signed in.
+    install_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    app_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    platform: Mapped[str] = mapped_column(String(16), nullable=False)
+    arch: Mapped[str] = mapped_column(String(16), nullable=False)
+    process: Mapped[str] = mapped_column(String(16), nullable=False)  # main | renderer | gpu | utility
+    message: Mapped[str] = mapped_column(String(2000), nullable=False)
+    stack: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False, index=True)
+
+
+class SyncedProject(Base):
+    """A desktop project's copy on the account (DSK-14). The folder on disk is the working copy; this is a backup and a way across."""
+
+    __tablename__ = "synced_projects"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)  # the id in kiungo.json
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    name: Mapped[str] = mapped_column(String(200), default="", nullable=False)
+    board: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    # The server's clock: +1 on every accepted change. Clients send it back in If-Match.
+    revision: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
+
+
+class SyncedFile(Base):
+    """One file of a synced project's current tree."""
+
+    __tablename__ = "synced_files"
+
+    project_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    path: Mapped[str] = mapped_column(String(255), primary_key=True)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    # The project revision that last changed this file.
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class FileBlob(Base):
+    """A file's content, by its SHA-256. Kept per owner, so a hash never gives access to someone else's file."""
+
+    __tablename__ = "file_blobs"
+
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    sha256: Mapped[str] = mapped_column(String(64), primary_key=True)
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ProjectRevision(Base):
+    """The whole tree at one revision, the last 20 per project, so an earlier version can be restored."""
+
+    __tablename__ = "project_revisions"
+
+    project_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    revision: Mapped[int] = mapped_column(Integer, primary_key=True)
+    device: Mapped[str] = mapped_column(String(120), default="", nullable=False)
+    files: Mapped[list] = mapped_column(JSON, nullable=False)  # [{path, sha256}]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

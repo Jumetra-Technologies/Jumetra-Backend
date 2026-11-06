@@ -30,9 +30,21 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
             "/auth/desktop/logout",
         }:
             return await call_next(request)
+        # Routes that check their own credentials: the release pipeline's token (api/routes/releases.py).
+        if request.url.path == "/releases" or request.url.path.startswith("/releases/"):
+            return await call_next(request)
+        # Crash reports are accepted signed out, with the sender's stated consent (api/routes/crash_reports.py).
+        if request.url.path == "/crash-reports":
+            return await call_next(request)
+
+        # The origin check stops other websites using the browser's cookies (CSRF). A request that
+        # carries its own bearer token, like the desktop app's, can't be forged that way: a browser
+        # only sends an Authorization header cross-site after a CORS preflight, which only allowed
+        # origins pass. So it needs a valid session, but no website origin.
+        bearer = request.headers.get("authorization", "").lower().startswith("bearer ")
 
         origin = request.headers.get("x-forwarded-origin") or request.headers.get("origin")
-        if not is_allowed_origin(origin, self.allowed_origins, self.origin_pattern):
+        if not bearer and not is_allowed_origin(origin, self.allowed_origins, self.origin_pattern):
             return JSONResponse({"detail": "Untrusted request origin"}, status_code=403)
 
         auth_response = Response()
