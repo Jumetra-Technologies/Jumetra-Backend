@@ -75,6 +75,7 @@ def _cors_origins() -> list[str]:
         "https://hhipsystemv0.firebaseapp.com",
         "https://kiungo-labs-technologies.vercel.app",
         "https://jumetra-frontend.vercel.app",
+        "https://jumetra-frontendv0.vercel.app",
     ]
 
 

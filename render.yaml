@@ -1,22 +1,51 @@
+# Kiungo's API on Render (free plan), with its data in a Neon PostgreSQL database.
+# Set up and kept running as in docs/deploy-render.md. Render redeploys on every push to main.
+#
+# Values marked sync: false are typed in once on Render, never committed:
+#   DATABASE_URL              Neon's connection string (postgresql://...?sslmode=require)
+#   FIREBASE_API_KEY          from the current /auth/config (public: the website already sends it to every visitor)
+#   FIREBASE_APP_ID           from the same place
+#   HHIP_ADMIN_PASSWORD_HASH  the admin portal's password: python -m api.services.admin_auth 'password'
 services:
   - type: web
-    name: jumetra-backend
+    name: kiungo-api
     runtime: python
+    plan: free
+    region: frankfurt
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips '*'
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
-      - key: HHIP_DATA_DIR
-        value: /var/data
-      - key: HHIP_CORS_ORIGINS
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL
         sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FIREBASE_PROJECT_ID
+        value: hhipsystemv0
+      - key: FIREBASE_AUTH_DOMAIN
+        value: hhipsystemv0.firebaseapp.com
+      - key: FIREBASE_API_KEY
+        sync: false
+      - key: FIREBASE_APP_ID
+        sync: false
+      - key: HHIP_ADMIN_PASSWORD_HASH
+        sync: false
+      - key: HHIP_CORS_ORIGINS
+        value: https://jumetra-frontendv0.vercel.app,https://kiungo-labs-technologies.vercel.app,https://jumetra-frontend.vercel.app,https://hhipsystemv0.web.app,https://hhipsystemv0.firebaseapp.com,http://localhost:3000,http://127.0.0.1:3000
+      # The website and this API are on different sites, so sign-in cookies must be SameSite=None; Secure.
       - key: COOKIE_SECURE
         value: "true"
       - key: COOKIE_SAMESITE
-        value: lax
+        value: none
       - key: HHIP_REQUIRE_AUTH
         value: "true"
-    disk:
-      name: jumetra-data
-      mountPath: /var/data
-      sizeGB: 1
+      # Only what isn't in the database (component catalog caches): fine to lose on a restart.
+      - key: HHIP_DATA_DIR
+        value: /tmp/hhip-data
+      - key: HHIP_DISABLE_DISCOVERY
+        value: "1"
+      - key: HHIP_FIRMWARE_DRY_RUN
+        value: "1"
