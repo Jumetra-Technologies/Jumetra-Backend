@@ -22,7 +22,8 @@ def test_fresh_database_gets_every_migration(tmp_path):
     factory = init_db(tmp_path)
     tables = _tables(factory)
     assert {"users", "refresh_tokens", "devices", "desktop_auth_codes", "releases", "release_files", "consents", "crash_reports", "user_projects", "lab_sessions", "synced_projects", "synced_files", "file_blobs", "project_revisions"} <= tables
-    assert _version(factory) == "0005_projects_sync"
+    assert _version(factory) == "0006_activity_admin"
+    assert {"activity_presence", "activity_daily", "activity_pages", "admin_sessions", "admin_sign_in_attempts"} <= tables
     columns = {c["name"] for c in inspect(factory.kw["bind"]).get_columns("refresh_tokens")}
     assert {"client", "device_id"} <= columns
 
@@ -45,7 +46,7 @@ def test_database_from_before_migrations_is_adopted(tmp_path):
     con.close()
 
     factory = init_db(tmp_path)
-    assert _version(factory) == "0005_projects_sync"
+    assert _version(factory) == "0006_activity_admin"
     assert {"devices", "desktop_auth_codes", "user_profiles", "refresh_tokens"} <= _tables(factory)
     columns = {c["name"] for c in inspect(factory.kw["bind"]).get_columns("users")}
     assert {"firebase_uid", "photo_url", "last_login_at"} <= columns
@@ -54,4 +55,4 @@ def test_database_from_before_migrations_is_adopted(tmp_path):
 
     # Starting again on the same file is a no-op.
     again = init_db(tmp_path)
-    assert _version(again) == "0005_projects_sync"
+    assert _version(again) == "0006_activity_admin"

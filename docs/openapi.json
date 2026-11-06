@@ -109,6 +109,24 @@
         "title": "AddWireRequest",
         "type": "object"
       },
+      "AdminSessionOut": {
+        "properties": {
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expires_at"
+        ],
+        "title": "AdminSessionOut",
+        "type": "object"
+      },
       "AdvanceRequest": {
         "properties": {
           "delta_ms": {
@@ -1844,6 +1862,21 @@
         "title": "LinkBody",
         "type": "object"
       },
+      "PasswordBody": {
+        "properties": {
+          "password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "PasswordBody",
+        "type": "object"
+      },
       "PhysicalConnectRequest": {
         "properties": {
           "board_type": {
@@ -2620,6 +2653,106 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/overview": {
+      "get": {
+        "operationId": "admin_overview_admin_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 90,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Overview Admin Overview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Overview",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/session": {
+      "delete": {
+        "operationId": "admin_sign_out_admin_session_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Admin Sign Out",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_sign_in_admin_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Sign In",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/analytics": {
       "get": {
         "operationId": "get_analytics_analytics_get",
@@ -8432,6 +8565,20 @@
         "summary": "Withdraw Release",
         "tags": [
           "releases"
+        ]
+      }
+    },
+    "/telemetry/heartbeat": {
+      "post": {
+        "operationId": "heartbeat_telemetry_heartbeat_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Heartbeat",
+        "tags": [
+          "telemetry"
         ]
       }
     },

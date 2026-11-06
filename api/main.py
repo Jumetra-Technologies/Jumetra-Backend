@@ -28,6 +28,8 @@ from auth.tokens import session_secret
 from .db import init_db
 from .routes.analytics import router as analytics_router
 from .routes.community import router as community_router
+from .routes.telemetry import router as telemetry_router
+from .routes.admin import router as admin_router
 from .routes.components import router as components_router
 from .routes.components_v2 import router as components_v2_router
 from .routes.controllers import router as controllers_router
@@ -202,6 +204,8 @@ def create_app(*, data_dir: Path | str | None = None) -> FastAPI:
     app.include_router(devices_router)
     app.include_router(analytics_router)
     app.include_router(community_router)
+    app.include_router(telemetry_router)
+    app.include_router(admin_router)
     app.include_router(workspace_router)
     app.include_router(workspace_hardware_router)
     app.include_router(workspace_connections_router)

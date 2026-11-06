@@ -28,6 +28,8 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
             "/auth/desktop/token",
             "/auth/desktop/refresh",
             "/auth/desktop/logout",
+            "/telemetry/heartbeat",  # checks its own origin or token; signed-out visitors count too
+            "/admin/session",  # the admin password, or the admin token on sign-out
         }:
             return await call_next(request)
         # Routes that check their own credentials: the release pipeline's token (api/routes/releases.py).

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.db.base import Base
@@ -315,3 +315,73 @@ class ProjectRevision(Base):
     device: Mapped[str] = mapped_column(String(120), default="", nullable=False)
     files: Mapped[list] = mapped_column(JSON, nullable=False)  # [{path, sha256}]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+# ----- Usage, for the admin portal -----
+#
+# Who is online, how long each account spends in Kiungo, and which pages get
+# used, from the website and the desktop app (POST /telemetry/heartbeat).
+# Only totals per day are kept, never a log of what someone did. A visitor who
+# isn't signed in is a keyed hash of a random id their browser made, so these
+# rows never name them. Rows go after 400 days (api/services/activity.py).
+
+
+class ActivityPresence(Base):
+    """Where a person or visitor is right now, on one client. Online means seen in the last two minutes."""
+
+    __tablename__ = "activity_presence"
+
+    subject: Mapped[str] = mapped_column(String(40), primary_key=True)  # u:<user id> | v:<hashed visitor id>
+    client: Mapped[str] = mapped_column(String(8), primary_key=True)  # web | desktop
+    user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    page: Mapped[str] = mapped_column(String(96), default="/", nullable=False)
+    app_version: Mapped[str] = mapped_column(String(32), default="", nullable=False)
+    visit_started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, index=True)
+    left: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class ActivityDaily(Base):
+    """Seconds one person or visitor spent in Kiungo on one day (UTC), per client."""
+
+    __tablename__ = "activity_daily"
+
+    subject: Mapped[str] = mapped_column(String(40), primary_key=True)
+    day: Mapped[date] = mapped_column(Date, primary_key=True, index=True)
+    client: Mapped[str] = mapped_column(String(8), primary_key=True)
+    user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    seconds: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class ActivityPageDaily(Base):
+    """Views of, and seconds spent on, one page on one day (UTC), per client. Ids in paths are replaced with :id."""
+
+    __tablename__ = "activity_pages"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True, index=True)
+    client: Mapped[str] = mapped_column(String(8), primary_key=True)
+    page: Mapped[str] = mapped_column(String(96), primary_key=True)
+    views: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    seconds: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class AdminSession(Base):
+    """One admin portal sign-in. Its token names this row, so signing out ends it at once."""
+
+    __tablename__ = "admin_sessions"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    ip_hash: Mapped[str] = mapped_column(String(16), default="", nullable=False)
+
+
+class AdminSignInAttempt(Base):
+    """Each try at the admin password, right or wrong: what the lockout counts and the portal lists."""
+
+    __tablename__ = "admin_sign_in_attempts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, index=True)
+    ip_hash: Mapped[str] = mapped_column(String(16), default="", nullable=False, index=True)
+    ok: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
