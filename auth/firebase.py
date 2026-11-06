@@ -9,6 +9,7 @@ from urllib.request import Request, urlopen
 import firebase_admin
 from firebase_admin import auth as firebase_auth
 from firebase_admin import credentials
+from google.auth.credentials import AnonymousCredentials
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import service_account
 
@@ -67,11 +68,21 @@ _available = False
 _PROVIDERS = {"google": "google.com", "github": "github.com"}
 
 
+class _NoCredentials(credentials.Base):
+    """For a server without the service-account file: checking a sign-in token only needs Google's public keys."""
+
+    def get_credential(self):
+        return AnonymousCredentials()
+
+
 def init_firebase() -> bool:
     """Initialize the Firebase Admin SDK if credentials are present.
 
-    Returns True when sign-in can verify tokens. Without credentials the server
-    still starts (local development, tests, CI); the sign-in routes answer 503.
+    Returns True when sign-in can verify tokens. With the service-account file
+    (FIREBASE_CREDENTIALS) it can do everything; with only FIREBASE_PROJECT_ID
+    it checks sign-in tokens against Google's public keys, which is all signing
+    in needs (Render, docs/deploy-render.md). With neither the server still
+    starts (local development, tests, CI) and the sign-in routes answer 503.
     """
     global _available
     load_auth_env()
@@ -82,10 +93,13 @@ def init_firebase() -> bool:
     except ValueError:
         pass
     path = credential_path()
-    if not path.is_file():
+    if path.is_file():
+        firebase_admin.initialize_app(credentials.Certificate(str(path)))
+    elif os.environ.get("FIREBASE_PROJECT_ID", "").strip():
+        firebase_admin.initialize_app(_NoCredentials(), options={"projectId": os.environ["FIREBASE_PROJECT_ID"].strip()})
+    else:
         _available = False
         return False
-    firebase_admin.initialize_app(credentials.Certificate(str(path)))
     _available = True
     return True
 
