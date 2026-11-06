@@ -34,6 +34,10 @@ there.
 | --- | --- |
 | `0001_baseline` | Every table before migrations existed: the Phase One platform tables, the identity tables, the account data tables |
 | `0002_desktop_sign_in` | `devices`, `desktop_auth_codes`; `client` and `device_id` on `refresh_tokens`; `device_id` on `access_tokens` |
+| `0003_releases` | `releases`, `release_files` (desktop releases, `GET /releases/latest`) |
+| `0004_consents` | `consents`, `crash_reports` (crash-report consent) |
+| `0005_projects_sync` | `synced_projects`, `synced_files`, `file_blobs`, `project_revisions` (project sync, `docs/sync-api.md`) |
+| `0006_activity_admin` | `activity_presence`, `activity_daily`, `activity_pages` (usage for the admin portal); `admin_sessions`, `admin_sign_in_attempts` |
 
 Write migrations with `batch_alter_table` for anything that changes an
 existing table (`alembic/env.py` sets `render_as_batch`), so they run on

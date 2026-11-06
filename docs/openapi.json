@@ -109,6 +109,24 @@
         "title": "AddWireRequest",
         "type": "object"
       },
+      "AdminSessionOut": {
+        "properties": {
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expires_at"
+        ],
+        "title": "AdminSessionOut",
+        "type": "object"
+      },
       "AdvanceRequest": {
         "properties": {
           "delta_ms": {
@@ -219,6 +237,25 @@
         "title": "BindingRequest",
         "type": "object"
       },
+      "BlobIn": {
+        "properties": {
+          "base64": {
+            "maxLength": 2796210,
+            "title": "Base64",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sha256",
+          "base64"
+        ],
+        "title": "BlobIn",
+        "type": "object"
+      },
       "BuildRequest": {
         "properties": {
           "project_id": {
@@ -266,6 +303,41 @@
           "device"
         ],
         "title": "CodeRequest",
+        "type": "object"
+      },
+      "CommitIn": {
+        "properties": {
+          "board": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Board",
+            "type": "string"
+          },
+          "device": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Device",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileRef"
+            },
+            "maxItems": 300,
+            "title": "Files",
+            "type": "array"
+          },
+          "name": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "title": "CommitIn",
         "type": "object"
       },
       "CommunityBreakdown": {
@@ -817,6 +889,103 @@
           }
         },
         "title": "ConnectionPatchRequest",
+        "type": "object"
+      },
+      "ConsentIn": {
+        "properties": {
+          "crash_reports": {
+            "title": "Crash Reports",
+            "type": "boolean"
+          },
+          "decided_in": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Decided In",
+            "type": "string"
+          }
+        },
+        "required": [
+          "crash_reports"
+        ],
+        "title": "ConsentIn",
+        "type": "object"
+      },
+      "CrashReportIn": {
+        "properties": {
+          "app_version": {
+            "maxLength": 32,
+            "title": "App Version",
+            "type": "string"
+          },
+          "arch": {
+            "enum": [
+              "x64",
+              "arm64",
+              "ia32"
+            ],
+            "title": "Arch",
+            "type": "string"
+          },
+          "consent": {
+            "const": true,
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "install_id": {
+            "maxLength": 64,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Install Id",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "windows",
+              "linux",
+              "macos"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "process": {
+            "enum": [
+              "main",
+              "renderer",
+              "gpu",
+              "utility"
+            ],
+            "title": "Process",
+            "type": "string"
+          },
+          "stack": {
+            "default": "",
+            "maxLength": 32000,
+            "title": "Stack",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent",
+          "install_id",
+          "app_version",
+          "platform",
+          "arch",
+          "process",
+          "message",
+          "occurred_at"
+        ],
+        "title": "CrashReportIn",
         "type": "object"
       },
       "CreateProjectRequest": {
@@ -1386,6 +1555,25 @@
         "title": "ExperimentSummary",
         "type": "object"
       },
+      "FileRef": {
+        "properties": {
+          "path": {
+            "maxLength": 255,
+            "title": "Path",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "title": "FileRef",
+        "type": "object"
+      },
       "FirmwareUploadRequest": {
         "properties": {
           "firmware_path": {
@@ -1416,6 +1604,23 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HashesIn": {
+        "properties": {
+          "hashes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 300,
+            "title": "Hashes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "hashes"
+        ],
+        "title": "HashesIn",
         "type": "object"
       },
       "HighlightRequest": {
@@ -1655,6 +1860,21 @@
           "provider"
         ],
         "title": "LinkBody",
+        "type": "object"
+      },
+      "PasswordBody": {
+        "properties": {
+          "password": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "PasswordBody",
         "type": "object"
       },
       "PhysicalConnectRequest": {
@@ -1961,6 +2181,129 @@
           "refresh_token"
         ],
         "title": "RefreshRequest",
+        "type": "object"
+      },
+      "ReleaseFileIn": {
+        "properties": {
+          "arch": {
+            "enum": [
+              "x64",
+              "arm64"
+            ],
+            "title": "Arch",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "nsis",
+              "dmg",
+              "zip",
+              "appimage",
+              "deb",
+              "rpm"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "windows",
+              "linux",
+              "macos"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "sha512": {
+            "maxLength": 128,
+            "minLength": 86,
+            "title": "Sha512",
+            "type": "string"
+          },
+          "size": {
+            "exclusiveMaximum": 4294967296.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Size",
+            "type": "integer"
+          },
+          "url": {
+            "maxLength": 512,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "platform",
+          "arch",
+          "kind",
+          "url",
+          "sha512",
+          "size"
+        ],
+        "title": "ReleaseFileIn",
+        "type": "object"
+      },
+      "ReleaseIn": {
+        "properties": {
+          "channel": {
+            "default": "stable",
+            "enum": [
+              "stable",
+              "beta"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ReleaseFileIn"
+            },
+            "maxItems": 24,
+            "minItems": 1,
+            "title": "Files",
+            "type": "array"
+          },
+          "minimum_version": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Version"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "version": {
+            "maxLength": 32,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "files"
+        ],
+        "title": "ReleaseIn",
         "type": "object"
       },
       "RunRequest": {
@@ -2310,6 +2653,106 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/overview": {
+      "get": {
+        "operationId": "admin_overview_admin_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 90,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Overview Admin Overview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Overview",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/session": {
+      "delete": {
+        "operationId": "admin_sign_out_admin_session_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Admin Sign Out",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "admin_sign_in_admin_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Sign In",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/analytics": {
       "get": {
         "operationId": "get_analytics_analytics_get",
@@ -3008,6 +3451,70 @@
         ]
       }
     },
+    "/auth/me/consents": {
+      "get": {
+        "operationId": "get_consents_auth_me_consents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Consents Auth Me Consents Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Consents",
+        "tags": [
+          "crash reports"
+        ]
+      },
+      "put": {
+        "operationId": "put_consents_auth_me_consents_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Consents Auth Me Consents Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Consents",
+        "tags": [
+          "crash reports"
+        ]
+      }
+    },
     "/auth/me/devices": {
       "get": {
         "operationId": "list_devices_auth_me_devices_get",
@@ -3332,6 +3839,400 @@
         "summary": "Create Project",
         "tags": [
           "account"
+        ]
+      }
+    },
+    "/auth/me/projects-sync": {
+      "get": {
+        "operationId": "list_projects_auth_me_projects_sync_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Projects Auth Me Projects Sync Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Projects",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}": {
+      "delete": {
+        "operationId": "delete_project_auth_me_projects_sync__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete Project Auth Me Projects Sync  Project Id  Delete"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Project",
+        "tags": [
+          "project sync"
+        ]
+      },
+      "get": {
+        "operationId": "get_project_auth_me_projects_sync__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Project Auth Me Projects Sync  Project Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Project",
+        "tags": [
+          "project sync"
+        ]
+      },
+      "put": {
+        "operationId": "commit_project_auth_me_projects_sync__project_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Commit Project Auth Me Projects Sync  Project Id  Put"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Commit Project",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/blobs": {
+      "post": {
+        "operationId": "upload_blobs_auth_me_projects_sync__project_id__blobs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/BlobIn"
+                },
+                "title": "Body",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Upload Blobs Auth Me Projects Sync  Project Id  Blobs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Blobs",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/blobs/missing": {
+      "post": {
+        "operationId": "missing_blobs_auth_me_projects_sync__project_id__blobs_missing_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HashesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Missing Blobs Auth Me Projects Sync  Project Id  Blobs Missing Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Missing Blobs",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/blobs/{sha256}": {
+      "get": {
+        "operationId": "get_blob_auth_me_projects_sync__project_id__blobs__sha256__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sha256",
+            "required": true,
+            "schema": {
+              "title": "Sha256",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Blob",
+        "tags": [
+          "project sync"
+        ]
+      }
+    },
+    "/auth/me/projects-sync/{project_id}/restore": {
+      "post": {
+        "operationId": "restore_project_auth_me_projects_sync__project_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Restore Project Auth Me Projects Sync  Project Id  Restore Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Project",
+        "tags": [
+          "project sync"
         ]
       }
     },
@@ -4499,6 +5400,49 @@
         "summary": "List Controllers",
         "tags": [
           "controllers"
+        ]
+      }
+    },
+    "/crash-reports": {
+      "post": {
+        "operationId": "post_crash_report_crash_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrashReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Post Crash Report Crash Reports Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Crash Report",
+        "tags": [
+          "crash reports"
         ]
       }
     },
@@ -7395,6 +8339,246 @@
         "summary": "Start Laboratory",
         "tags": [
           "laboratory"
+        ]
+      }
+    },
+    "/releases": {
+      "post": {
+        "operationId": "publish_release_releases_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Publish Release Releases Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Release",
+        "tags": [
+          "releases"
+        ]
+      }
+    },
+    "/releases/latest": {
+      "get": {
+        "description": "The newest release on a channel that has an installer for this platform and architecture.",
+        "operationId": "latest_release_releases_latest_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "channel",
+            "required": false,
+            "schema": {
+              "default": "stable",
+              "enum": [
+                "stable",
+                "beta"
+              ],
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "platform",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "windows",
+                    "linux",
+                    "macos"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Platform"
+            }
+          },
+          {
+            "in": "query",
+            "name": "arch",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "x64",
+                    "arm64"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Arch"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Latest Release Releases Latest Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Latest Release",
+        "tags": [
+          "releases"
+        ]
+      }
+    },
+    "/releases/{channel}/{version}/withdraw": {
+      "post": {
+        "description": "Stop offering a release (a bad build). Apps that installed it update to the newest one left.",
+        "operationId": "withdraw_release_releases__channel___version__withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "enum": [
+                "stable",
+                "beta"
+              ],
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Withdraw Release Releases  Channel   Version  Withdraw Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw Release",
+        "tags": [
+          "releases"
+        ]
+      }
+    },
+    "/telemetry/heartbeat": {
+      "post": {
+        "operationId": "heartbeat_telemetry_heartbeat_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Heartbeat",
+        "tags": [
+          "telemetry"
         ]
       }
     },
