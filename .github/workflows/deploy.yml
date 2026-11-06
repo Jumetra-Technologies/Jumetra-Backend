@@ -16,6 +16,14 @@ name: Deploy the API
 #   FIREBASE_ADMINSDK_JSON the file production uses as credentials/firebase-adminsdk.json
 #   SESSION_SECRET         production's credentials/session.secret. Use the one it has now:
 #                          a new one signs everybody out.
+#   DATABASE_URL           the PostgreSQL database production keeps its data in
+#                          (postgresql://user:password@host:5432/kiungo; docs/database.md).
+#                          Required: without it the function keeps everything in /tmp, which
+#                          each of its instances has its own copy of and loses on a cold start,
+#                          so accounts, projects and sign-ins would come and go at random.
+#   HHIP_ADMIN_PASSWORD_HASH  optional: the admin portal's password, as
+#                          `python -m api.services.admin_auth 'password'` prints it. Without it the
+#                          default in api/services/admin_auth.py applies.
 
 on:
   push:
@@ -42,6 +50,8 @@ jobs:
       GCP_DEPLOY_KEY: ${{ secrets.GCP_DEPLOY_KEY }}
       FIREBASE_ADMINSDK_JSON: ${{ secrets.FIREBASE_ADMINSDK_JSON }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      HHIP_ADMIN_PASSWORD_HASH: ${{ secrets.HHIP_ADMIN_PASSWORD_HASH }}
       HHIP_DISABLE_DISCOVERY: "1"
       HHIP_FIRMWARE_DRY_RUN: "1"
     steps:
@@ -72,6 +82,22 @@ jobs:
           printf '%s' "$FIREBASE_ADMINSDK_JSON" > credentials/firebase-adminsdk.json
           printf '%s' "$SESSION_SECRET" > credentials/session.secret
           python -c "import json; json.load(open('credentials/firebase-adminsdk.json'))"
+
+      - name: Settings the function runs with (.env, read by the Firebase CLI at deploy)
+        if: env.GCP_DEPLOY_KEY != ''
+        run: |
+          set -euo pipefail
+          [ -n "$DATABASE_URL" ] || { echo "::error::DATABASE_URL isn't set. Production must keep its data in PostgreSQL: in /tmp every instance has its own copy and a cold start wipes it. See docs/database.md."; exit 1; }
+          python - <<'PY'
+          import os
+          lines = [f'DATABASE_URL="{os.environ["DATABASE_URL"]}"']
+          if os.environ.get("HHIP_ADMIN_PASSWORD_HASH"):
+              lines.append(f'HHIP_ADMIN_PASSWORD_HASH="{os.environ["HHIP_ADMIN_PASSWORD_HASH"]}"')
+          for line in lines:
+              assert "$" not in line, "A value has a $ in it, which the .env file would read as a variable."
+          open(".env", "w").write("\n".join(lines) + "\n")
+          PY
+          echo "Wrote .env: $(cut -d= -f1 .env | tr '\n' ' ')"
 
       - name: The virtual environment Firebase deploys Python functions from
         if: env.GCP_DEPLOY_KEY != ''
