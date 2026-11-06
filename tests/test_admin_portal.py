@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from api.main import create_app
 from api.services import activity, admin_auth
 from auth import firebase
-from database.models import ActivityDaily, ActivityPageDaily, ActivityPresence, AdminSignInAttempt, UserProject
+from database.models import ActivityDaily, ActivityPageDaily, ActivityPresence, AdminSignInAttempt, SyncedProject, UserProject
 
 ORIGIN = {"Origin": "http://localhost:3000"}
 PASSWORD = "Kiungo1.!"
@@ -268,6 +268,10 @@ def test_the_overview_counts_accounts_projects_time_pages_and_who_is_online(clie
         assert s.query(UserProject).count() == 1
         now = datetime.now(timezone.utc)
         a, b = ada["user"]["id"], bo["user"]["id"]
+        # Bo has one desktop project synced to the account, and one he deleted.
+        s.add(SyncedProject(id="p-desk", owner_id=b, name="Line follower"))
+        s.add(SyncedProject(id="p-gone", owner_id=b, name="Old", deleted_at=now))
+        s.commit()
         # Ada: 2 minutes on the web today, still here. Bo: 5 minutes on desktop yesterday, gone.
         activity.record(s, _beat(user_id=a, visitor_key=None, event="view", page="/lab"), now - timedelta(seconds=120))
         for k in (1, 2, 3, 4):
@@ -280,12 +284,12 @@ def test_the_overview_counts_accounts_projects_time_pages_and_who_is_online(clie
 
     data = client.get("/admin/overview?days=7", headers=bearer(admin_token(client))).json()
     t = data["totals"]
-    assert (t["accounts"], t["projects"], t["online_accounts"], t["online_visitors"]) == (2, 1, 1, 1)
+    assert (t["accounts"], t["projects"], t["desktop_projects"], t["online_accounts"], t["online_visitors"]) == (2, 2, 1, 1, 1)
     assert t["seconds_range"] == 120 + 300
     by_name = {acc["name"]: acc for acc in data["accounts"]}
     assert by_name["Ada"]["online"] is True and by_name["Bo"]["online"] is False
     assert (by_name["Ada"]["seconds_web"], by_name["Bo"]["seconds_desktop"]) == (120, 300)
-    assert by_name["Ada"]["projects"] == 1
+    assert (by_name["Ada"]["projects"], by_name["Bo"]["projects"], by_name["Bo"]["desktop_projects"]) == (1, 1, 1)
     assert [acc["name"] for acc in data["accounts"]] == ["Bo", "Ada"]  # most time first
     assert data["online"][0]["name"] == "Ada" and data["online"][0]["page"] == "/lab"
     assert {p["page"] for p in data["pages"]} == {"/lab", "/desktop/project", "/"}
