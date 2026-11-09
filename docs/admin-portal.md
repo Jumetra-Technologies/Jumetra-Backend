@@ -33,6 +33,21 @@ before sharing the portal with anyone: the default hash is in this repository.
   (`DELETE /admin/session`) ends it at once.
 - Responses are `Cache-Control: no-store`.
 
+## Consent
+
+Nothing is counted until the person says yes, in the website's banner or in
+Settings, Privacy (the Cookie Policy says what's counted):
+
+- **Signed in**, the answer is kept on the account (`consents.usage`, through
+  `PUT /auth/me/consents`), so the desktop app follows it too. This server
+  drops heartbeats from any account that hasn't said yes, whatever sends them.
+- **Signed out**, the website sends nothing until the visitor allows it.
+- **Saying no later** deletes the time and presence recorded for the account
+  (or, signed out, for that browser's id, via `POST /telemetry/forget`). Page
+  totals carry no names and stay.
+- The overview's `usage_consent` counts accounts that allowed, declined or
+  weren't asked yet, and each account row carries its answer.
+
 ## Where the figures come from
 
 `POST /telemetry/heartbeat`, sent by:

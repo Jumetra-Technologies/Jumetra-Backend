@@ -894,19 +894,34 @@
       "ConsentIn": {
         "properties": {
           "crash_reports": {
-            "title": "Crash Reports",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crash Reports"
           },
           "decided_in": {
             "default": "",
             "maxLength": 40,
             "title": "Decided In",
             "type": "string"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage"
           }
         },
-        "required": [
-          "crash_reports"
-        ],
         "title": "ConsentIn",
         "type": "object"
       },
@@ -8565,6 +8580,21 @@
         "summary": "Withdraw Release",
         "tags": [
           "releases"
+        ]
+      }
+    },
+    "/telemetry/forget": {
+      "post": {
+        "description": "A signed-out visitor said no after saying yes: delete what was counted for their browser's id.",
+        "operationId": "forget_visitor_telemetry_forget_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Forget Visitor",
+        "tags": [
+          "telemetry"
         ]
       }
     },

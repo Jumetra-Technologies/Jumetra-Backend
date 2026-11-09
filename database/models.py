@@ -231,12 +231,14 @@ class ReleaseFile(Base):
 
 
 class Consent(Base):
-    """What a signed-in person has agreed to share. No row means they haven't been asked."""
+    """What a signed-in person has agreed to share. No row, or None in a column, means they haven't been asked."""
 
     __tablename__ = "consents"
 
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    crash_reports: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    crash_reports: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    # Counting which pages they open and how long they use Kiungo, for the admin portal (api/services/activity.py).
+    usage: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
     decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
     # Where they decided: "desktop 0.6.0", "website".
     decided_in: Mapped[str] = mapped_column(String(40), default="", nullable=False)

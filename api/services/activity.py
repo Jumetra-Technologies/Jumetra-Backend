@@ -39,6 +39,7 @@ from database.models import (
     ActivityPresence,
     AdminSignInAttempt,
     AdminSession,
+    Consent,
     Device,
     LabSessionRecord,
     OAuthAccount,
@@ -179,6 +180,26 @@ def _apply(session: Session, beat: Beat, subject: str, page: str, now: datetime)
     return True
 
 
+def usage_allowed(session: Session, user_id: str) -> bool:
+    """Whether this account said yes to usage counting. Not asked counts as no."""
+    consent = session.get(Consent, user_id)
+    return bool(consent is not None and consent.usage)
+
+
+def forget_user(session: Session, user_id: str) -> None:
+    """Delete the time and presence recorded for an account (it said no). Page totals have no names in them and stay."""
+    session.execute(delete(ActivityDaily).where(ActivityDaily.user_id == user_id))
+    session.execute(delete(ActivityPresence).where(ActivityPresence.user_id == user_id))
+
+
+def forget_visitor(session: Session, visitor_key: str) -> None:
+    """The same for a signed-out visitor who said no after saying yes."""
+    subject = f"v:{visitor_key}"
+    session.execute(delete(ActivityDaily).where(ActivityDaily.subject == subject))
+    session.execute(delete(ActivityPresence).where(ActivityPresence.subject == subject))
+    session.commit()
+
+
 def prune(session: Session, now: Optional[datetime] = None) -> None:
     """Delete what's past keeping: daily rows after RETAIN_DAYS, presence after 30 days, admin records after 90."""
     now = now or datetime.now(timezone.utc)
@@ -258,6 +279,8 @@ def overview(session: Session, *, days: int = 7, now: Optional[datetime] = None)
     online.sort(key=lambda o: o["since"])
     online_ids = {o["user_id"] for o in online}
 
+    # Each account's answer to usage counting: True, False, or None (not asked yet).
+    answers = {u: c for u, c in session.execute(select(Consent.user_id, Consent.usage))}
     accounts = []
     for u in users.values():
         t = totals.get(u.id, {"all": 0, "range": 0, "web": 0, "desktop": 0, "days": set()})
@@ -279,6 +302,7 @@ def overview(session: Session, *, days: int = 7, now: Optional[datetime] = None)
                 "projects": project_counts.get(u.id, 0) + desktop_counts.get(u.id, 0),
                 "desktop_projects": desktop_counts.get(u.id, 0),
                 "lab_sessions": session_counts.get(u.id, 0),
+                "usage_consent": answers.get(u.id),
             }
         )
     accounts.sort(key=lambda a: (-a["seconds_range"], -a["seconds_total"], a["name"].lower()))
@@ -311,6 +335,12 @@ def overview(session: Session, *, days: int = 7, now: Optional[datetime] = None)
     ):
         clients[client] = int(seconds or 0)
 
+    consent_counts = {
+        "allowed": sum(1 for u in users if answers.get(u) is True),
+        "declined": sum(1 for u in users if answers.get(u) is False),
+        "not_asked": sum(1 for u in users if answers.get(u) is None),
+    }
+
     tracked_since = session.scalar(select(func.min(ActivityDaily.day)))
     created = [_aware(u.created_at) for u in users.values() if u.created_at]
     attempts = list(session.scalars(select(AdminSignInAttempt).order_by(AdminSignInAttempt.at.desc()).limit(12)))
@@ -342,5 +372,6 @@ def overview(session: Session, *, days: int = 7, now: Optional[datetime] = None)
             for day, d in sorted(daily.items())
         ],
         "clients": clients,
+        "usage_consent": consent_counts,
         "admin_sign_ins": [{"at": _aware(a.at).isoformat(), "ok": a.ok, "from": a.ip_hash[:6]} for a in attempts],
     }

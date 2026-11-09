@@ -58,7 +58,7 @@ def report(**over):
 
 
 def test_not_asked_yet_then_yes_then_no(desktop):
-    assert desktop.get("/auth/me/consents").json() == {"crash_reports": None, "decided_at": None, "decided_in": None}
+    assert desktop.get("/auth/me/consents").json() == {"crash_reports": None, "usage": None, "decided_at": None, "decided_in": None}
     yes = desktop.put("/auth/me/consents", json={"crash_reports": True, "decided_in": "desktop 0.6.0"})
     assert yes.status_code == 200, yes.text
     assert yes.json()["crash_reports"] is True

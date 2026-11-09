@@ -1,8 +1,13 @@
-"""Crash reports, only with consent (Phase Two sprint 6; DSK-81 in sprint 12).
+"""Consents, and crash reports only with consent (Phase Two sprint 6; DSK-81 in sprint 12).
 
     GET  /auth/me/consents          what the signed-in person agreed to share
-    PUT  /auth/me/consents          record their answer
+    PUT  /auth/me/consents          record their answer to one question or both
     POST /crash-reports             one crash, sent by the desktop app
+
+Two questions, each answered on its own: crash reports (asked by the desktop
+app) and usage counting (asked by the website's banner; the desktop app
+follows the answer). None means not asked. Saying no to usage counting also
+deletes the time and presence recorded for the account (api/services/activity.py).
 
 The desktop app asks once, keeps the answer on the computer, and sends a
 report only when the answer is yes. A signed-in person's answer is also kept
@@ -25,6 +30,8 @@ from auth.routes import _user_from_access, current_user_id
 from auth.tokens import bearer_token
 from database.models import Consent, CrashReport
 
+from ..services import activity
+
 router = APIRouter(tags=["crash reports"])
 
 RETENTION = timedelta(days=90)
@@ -36,35 +43,45 @@ def _utcnow() -> datetime:
 
 
 class ConsentIn(BaseModel):
-    crash_reports: bool
+    crash_reports: Optional[bool] = None
+    usage: Optional[bool] = None
     decided_in: str = Field(default="", max_length=40)
+
+
+def _out(consent: Optional[Consent]) -> dict[str, Any]:
+    if consent is None:
+        return {"crash_reports": None, "usage": None, "decided_at": None, "decided_in": None}
+    return {"crash_reports": consent.crash_reports, "usage": consent.usage, "decided_at": consent.decided_at.isoformat(), "decided_in": consent.decided_in}
 
 
 @router.get("/auth/me/consents")
 def get_consents(request: Request, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     with request.app.state.db_factory() as session:
-        consent = session.get(Consent, user_id)
-        if consent is None:
-            return {"crash_reports": None, "decided_at": None, "decided_in": None}
-        return {"crash_reports": consent.crash_reports, "decided_at": consent.decided_at.isoformat(), "decided_in": consent.decided_in}
+        return _out(session.get(Consent, user_id))
 
 
 @router.put("/auth/me/consents")
 def put_consents(body: ConsentIn, request: Request, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
+    if body.crash_reports is None and body.usage is None:
+        raise HTTPException(status_code=422, detail="Answer crash_reports, usage or both.")
     with request.app.state.db_factory() as session:
         consent = session.get(Consent, user_id)
         if consent is None:
-            consent = Consent(user_id=user_id, crash_reports=body.crash_reports, decided_in=body.decided_in, decided_at=_utcnow())
+            consent = Consent(user_id=user_id)
             session.add(consent)
-        else:
+        if body.crash_reports is not None:
             consent.crash_reports = body.crash_reports
-            consent.decided_in = body.decided_in
-            consent.decided_at = _utcnow()
-        if not body.crash_reports:
+        if body.usage is not None:
+            consent.usage = body.usage
+        consent.decided_in = body.decided_in
+        consent.decided_at = _utcnow()
+        if body.crash_reports is False:
             # Saying no also removes what was sent under their account.
             session.execute(delete(CrashReport).where(CrashReport.user_id == user_id))
+        if body.usage is False:
+            activity.forget_user(session, user_id)
         session.commit()
-        return {"crash_reports": consent.crash_reports, "decided_at": consent.decided_at.isoformat(), "decided_in": consent.decided_in}
+        return _out(consent)
 
 
 class CrashReportIn(BaseModel):
@@ -102,7 +119,7 @@ def post_crash_report(body: CrashReportIn, request: Request, response: Response)
     with request.app.state.db_factory() as session:
         if user_id:
             consent = session.get(Consent, user_id)
-            if consent is not None and not consent.crash_reports:
+            if consent is not None and consent.crash_reports is False:
                 raise HTTPException(status_code=403, detail="This account has said no to crash reports.")
         report = CrashReport(
             install_id=body.install_id,
