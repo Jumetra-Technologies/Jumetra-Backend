@@ -99,10 +99,13 @@ def session_for(session: Session, token: str, secret: str, now: Optional[datetim
     """The live admin session this token names, or None."""
     now = now or datetime.now(timezone.utc)
     try:
-        claims = jwt.decode(token, secret, algorithms=["HS256"])
+        # Expiry is checked against `now` below (and the row's own expiry), not the library's clock.
+        claims = jwt.decode(token, secret, algorithms=["HS256"], options={"verify_exp": False, "require": ["exp"]})
     except jwt.PyJWTError:
         return None
     if claims.get("typ") != "admin" or claims.get("sub") != "admin":
+        return None
+    if datetime.fromtimestamp(int(claims["exp"]), timezone.utc) <= now:
         return None
     row = session.get(AdminSession, claims.get("jti", ""))
     if row is None or row.revoked_at is not None:
