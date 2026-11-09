@@ -6,8 +6,9 @@ the website and the desktop app, which pages get used, and who is online now.
 
 ## Getting in
 
-Click the Kiungo logo at the top left eight times. A password box opens; the
-right password opens `/admin` on the website for 30 minutes.
+Click the settings icon (the gear in the website's sidebar) twice, quickly. A
+password box opens instead of Settings; the right password opens `/admin` on
+the website for 30 minutes. `/admin` itself also asks for the password.
 
 The password is checked by this server (`POST /admin/session`), never by the
 website, whose code anyone can read. What's stored is a scrypt hash:
