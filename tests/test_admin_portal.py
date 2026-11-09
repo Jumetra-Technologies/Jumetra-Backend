@@ -167,8 +167,15 @@ def test_sendbeacon_text_body_and_bad_bodies(client):
     assert client.post("/telemetry/heartbeat", content="x" * 5000, headers=ORIGIN).status_code == 413
 
 
+def allow_usage(client: TestClient, token: str, yes: bool = True) -> dict:
+    r = client.put("/auth/me/consents", json={"usage": yes, "decided_in": "website"}, headers=bearer(token))
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
 def test_signed_in_heartbeats_count_for_the_account_on_web_and_desktop(client):
     me = sign_in(client)
+    allow_usage(client, me["access_token"])
     for event in ("view", "beat"):
         assert client.post("/telemetry/heartbeat", json={"page": "/lab", "event": event, "visitor": "visitor-abc-123"}, headers=bearer(me["access_token"])).status_code == 204
     assert client.post("/telemetry/heartbeat", json={"client": "desktop", "page": "/desktop/home", "app_version": "0.12.2"}, headers=bearer(me["access_token"])).status_code == 204
@@ -182,6 +189,7 @@ def test_signed_in_heartbeats_count_for_the_account_on_web_and_desktop(client):
 
 def test_the_websites_refresh_cookie_identifies_without_rotating(client):
     me = sign_in(client)
+    allow_usage(client, me["access_token"])
     client.cookies.set("hhip_refresh", me["refresh_token"])
     assert client.post("/telemetry/heartbeat", json={"page": "/", "event": "view"}, headers=ORIGIN).status_code == 204
     with client.app.state.db_factory() as s:
@@ -303,3 +311,65 @@ def test_the_overview_counts_accounts_projects_time_pages_and_who_is_online(clie
     assert data["clients"] == {"web": 120, "desktop": 300}
     assert len(data["daily"]) == 7 and data["daily"][-1]["new_accounts"] == 2
     assert data["admin_sign_ins"][0]["ok"] is True
+
+
+# ----- consent -----
+
+
+def test_an_account_that_has_not_said_yes_is_not_counted(client):
+    me = sign_in(client)
+    for event in ("view", "beat"):
+        assert client.post("/telemetry/heartbeat", json={"page": "/lab", "event": event}, headers=bearer(me["access_token"])).status_code == 204
+    assert client.post("/telemetry/heartbeat", json={"client": "desktop", "page": "/desktop/home"}, headers=bearer(me["access_token"])).status_code == 204
+    with client.app.state.db_factory() as s:
+        assert s.query(ActivityPresence).count() == 0
+        assert s.query(ActivityPageDaily).count() == 0
+
+
+def test_saying_no_deletes_what_was_counted_for_the_account_and_stops_counting(client):
+    me = sign_in(client)
+    uid = me["user"]["id"]
+    allow_usage(client, me["access_token"])
+    with client.app.state.db_factory() as s:
+        activity.record(s, _beat(user_id=uid, visitor_key=None, event="view"), T0)
+        activity.record(s, _beat(user_id=uid, visitor_key=None), T0 + timedelta(seconds=30))
+        assert s.query(ActivityDaily).filter(ActivityDaily.user_id == uid).count() == 1
+    answer = allow_usage(client, me["access_token"], yes=False)
+    assert answer["usage"] is False and answer["crash_reports"] is None
+    with client.app.state.db_factory() as s:
+        assert s.query(ActivityDaily).filter(ActivityDaily.user_id == uid).count() == 0
+        assert s.query(ActivityPresence).filter(ActivityPresence.user_id == uid).count() == 0
+        assert s.query(ActivityPageDaily).count() == 1  # page totals carry no names and stay
+    client.post("/telemetry/heartbeat", json={"page": "/lab", "event": "view"}, headers=bearer(me["access_token"]))
+    with client.app.state.db_factory() as s:
+        assert s.query(ActivityPresence).count() == 0
+
+
+def test_the_two_questions_are_answered_separately(client):
+    me = sign_in(client)
+    assert client.get("/auth/me/consents", headers=bearer(me["access_token"])).json() == {"crash_reports": None, "usage": None, "decided_at": None, "decided_in": None}
+    allow_usage(client, me["access_token"])
+    r = client.put("/auth/me/consents", json={"crash_reports": False, "decided_in": "desktop 0.13.1"}, headers=bearer(me["access_token"])).json()
+    assert (r["usage"], r["crash_reports"], r["decided_in"]) == (True, False, "desktop 0.13.1")
+    assert client.put("/auth/me/consents", json={"decided_in": "website"}, headers=bearer(me["access_token"])).status_code == 422
+
+
+def test_a_signed_out_visitor_can_take_it_back(client):
+    for event in ("view", "beat"):
+        client.post("/telemetry/heartbeat", json={"visitor": "visitor-abc-123", "event": event, "page": "/"}, headers=ORIGIN)
+    client.post("/telemetry/heartbeat", json={"visitor": "visitor-other-456", "event": "view", "page": "/"}, headers=ORIGIN)
+    assert client.post("/telemetry/forget", json={"visitor": "visitor-abc-123"}, headers={"Origin": "https://evil.example"}).status_code == 403
+    assert client.post("/telemetry/forget", content='{"visitor":"visitor-abc-123"}', headers={**ORIGIN, "Content-Type": "text/plain"}).status_code == 204
+    with client.app.state.db_factory() as s:
+        assert s.query(ActivityPresence).count() == 1  # only the other visitor
+
+
+def test_the_overview_counts_the_answers(client):
+    a = sign_in(client, "uid-1", "a@example.test", "A")
+    b = sign_in(client, "uid-2", "b@example.test", "B")
+    sign_in(client, "uid-3", "c@example.test", "C")
+    allow_usage(client, a["access_token"])
+    allow_usage(client, b["access_token"], yes=False)
+    data = client.get("/admin/overview", headers=bearer(admin_token(client))).json()
+    assert data["usage_consent"] == {"allowed": 1, "declined": 1, "not_asked": 1}
+    assert {acc["name"]: acc["usage_consent"] for acc in data["accounts"]} == {"A": True, "B": False, "C": None}

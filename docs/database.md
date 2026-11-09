@@ -38,6 +38,7 @@ there.
 | `0004_consents` | `consents`, `crash_reports` (crash-report consent) |
 | `0005_projects_sync` | `synced_projects`, `synced_files`, `file_blobs`, `project_revisions` (project sync, `docs/sync-api.md`) |
 | `0006_activity_admin` | `activity_presence`, `activity_daily`, `activity_pages` (usage for the admin portal); `admin_sessions`, `admin_sign_in_attempts` |
+| `0007_usage_consent` | `consents.usage` (usage counting, asked by the website's banner); `consents.crash_reports` may be unanswered |
 
 Write migrations with `batch_alter_table` for anything that changes an
 existing table (`alembic/env.py` sets `render_as_batch`), so they run on

@@ -29,6 +29,7 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
             "/auth/desktop/refresh",
             "/auth/desktop/logout",
             "/telemetry/heartbeat",  # checks its own origin or token; signed-out visitors count too
+            "/telemetry/forget",  # checks its own origin; a signed-out visitor withdrawing consent
             "/admin/session",  # the admin password, or the admin token on sign-out
         }:
             return await call_next(request)
