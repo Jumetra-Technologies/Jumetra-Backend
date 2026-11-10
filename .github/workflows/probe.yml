@@ -1,0 +1,17 @@
+name: Probe auth servers
+on:
+  push:
+    branches: [tmp/probe-auth]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          O="https://kiungo-labs-technologies.vercel.app"
+          for u in https://europe-west4-hhipsystemv0.cloudfunctions.net/api/auth/config https://europe-west4-hhipsystemv0.cloudfunctions.net/api/health https://api-aoxa3kagvq-ez.a.run.app/auth/config https://kiungo-api.onrender.com/health; do
+            echo "=== GET $u"; curl -sS -m 60 -i -H "Origin: $O" "$u" | head -30; echo
+          done
+          echo "=== OPTIONS preflight auth/google"
+          curl -sS -m 60 -i -X OPTIONS -H "Origin: $O" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" https://europe-west4-hhipsystemv0.cloudfunctions.net/api/auth/google | head -30
+          echo "=== openapi paths"
+          curl -sS -m 60 https://europe-west4-hhipsystemv0.cloudfunctions.net/api/openapi.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['info']); print(sorted(d['paths']))" || true
