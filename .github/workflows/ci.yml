@@ -62,4 +62,4 @@ jobs:
           test "$code" = "422"
       - name: Service log
         if: always()
-        run: docker logs compile
+        run: docker logs compile || true

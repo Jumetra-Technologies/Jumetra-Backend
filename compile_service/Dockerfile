@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 # The core and its compiler, installed once at build time; the service never downloads anything.
 RUN arduino-cli core update-index \
     && arduino-cli core install "${AVR_CORE}" \
-    && rm -rf /opt/arduino/downloads
+    && rm -rf /opt/arduino/downloads/* && mkdir -p /opt/arduino/user
 
 RUN useradd --system --create-home --home-dir /home/compiler --shell /usr/sbin/nologin compiler \
     && mkdir -p "${ARDUINO_BUILD_CACHE_PATH}" && chown compiler "${ARDUINO_BUILD_CACHE_PATH}"
