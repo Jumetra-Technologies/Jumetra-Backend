@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -44,6 +45,35 @@ BOARD_PROFILES: dict[str, dict[str, Any]] = {
     "nrf52": {"fqbn": "nordic:nrf52:nrf52840", "toolchain": "platformio", "flash_kb": 1024, "ram_kb": 256},
     "microbit": {"fqbn": "arduino:mbed_nano:nanoble", "toolchain": "arduino-cli", "flash_kb": 512, "ram_kb": 128},
 }
+
+
+_SEGMENT = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$")
+_PROJECT_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+MAX_PATH_DEPTH = 4
+
+
+def safe_relative_path(path: str) -> str:
+    """A project file path that stays inside the project, or ValueError.
+
+    Relative, forward slashes, at most four folders deep, each part made of
+    letters, digits, "_", "." and "-", and never starting with "." (so no
+    "..", no hidden files and no ".hhip_build").
+    """
+    if not isinstance(path, str) or not path or len(path) > 200:
+        raise ValueError("A file path is required, up to 200 characters.")
+    parts = path.split("/")
+    if len(parts) > MAX_PATH_DEPTH or not all(_SEGMENT.match(p) for p in parts):
+        raise ValueError(
+            f"{path!r} isn't an allowed file path: use letters, digits, '_', '-' and '.', "
+            "folders separated by '/', and no part starting with '.'."
+        )
+    return path
+
+
+def safe_project_id(project_id: str) -> str:
+    if not isinstance(project_id, str) or not _PROJECT_ID.match(project_id):
+        raise ValueError("That isn't a firmware project id.")
+    return project_id
 
 
 @dataclass
@@ -133,12 +163,19 @@ class FirmwareProjectRepository:
         return projects
 
     def get(self, project_id: str) -> Optional[FirmwareProject]:
+        try:
+            safe_project_id(project_id)
+        except ValueError:
+            return None
         path = self.base / project_id / "project.json"
         if not path.exists():
             return None
         return FirmwareProject.from_dict(json.loads(path.read_text(encoding="utf-8")))
 
     def save(self, project: FirmwareProject) -> FirmwareProject:
+        safe_project_id(project.project_id)
+        for f in project.files:
+            safe_relative_path(f.path)
         project.updated_at_ms = int(time.time() * 1000)
         root = self.base / project.project_id
         root.mkdir(parents=True, exist_ok=True)
@@ -146,8 +183,12 @@ class FirmwareProjectRepository:
         (root / "project.json").write_text(
             json.dumps(project.to_dict(), indent=2), encoding="utf-8"
         )
+        resolved_root = root.resolve()
         for f in project.files:
             fp = root / f.path
+            # Belt and braces: the checked path must still land inside the project (no links out).
+            if not fp.resolve().is_relative_to(resolved_root):
+                raise ValueError(f"{f.path!r} leaves the project folder.")
             fp.parent.mkdir(parents=True, exist_ok=True)
             fp.write_text(f.content, encoding="utf-8")
         return project
@@ -176,6 +217,7 @@ class FirmwareProjectRepository:
         return self.save(project)
 
     def update_file(self, project_id: str, path: str, content: str) -> FirmwareProject:
+        safe_relative_path(path)
         project = self.get(project_id)
         if project is None:
             raise KeyError(f"project not found: {project_id}")
