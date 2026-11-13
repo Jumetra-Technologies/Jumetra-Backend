@@ -83,6 +83,17 @@ def test_firmware_projects_are_private(people):
     assert a.post("/firmware/build", json={"project_id": pid}).status_code == 200
 
 
+def test_firmware_log_and_serial_reads_are_bounded(people):
+    # Merging main once dropped these bounds silently; this keeps them.
+    a, _, _ = people
+    assert a.get("/firmware/logs?limit=1000").status_code == 200
+    assert a.get("/firmware/logs?limit=0").status_code == 422
+    assert a.get("/firmware/logs?limit=1001").status_code == 422
+    assert a.get("/firmware/serial?limit=1000").status_code == 200
+    assert a.get("/firmware/serial?limit=5000").status_code == 422
+    assert a.get("/firmware/serial", params={"query": "x" * 201}).status_code == 422
+
+
 def test_firmware_templates_stay_open(people):
     _, _, anon = people
     assert anon.get("/firmware/templates").status_code == 200
