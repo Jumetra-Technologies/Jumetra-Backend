@@ -53,6 +53,7 @@ from .services.engineering_workspace_service import EngineeringWorkspaceService
 from .services.experiment_service import ExperimentService
 from .services.hybrid_service import HybridService
 from .services.job_scheduler import JobScheduler
+from .services.ownership import Owners
 from .services.laboratory_service import LaboratoryService
 from .services.workspace_hardware_service import WorkspaceHardwareService
 from .services.workspace_wiring_service import WorkspaceWiringService
@@ -98,14 +99,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     event_bus = EventBus()
     device_manager = DeviceManager()
     device_manager.bind_event_bus(event_bus)
+    discovery_off = os.environ.get("HHIP_DISABLE_DISCOVERY", "").lower() in {"1", "true", "yes"}
     discovery_inner = HardwareDiscoveryService(
         event_bus=event_bus,
         device_manager=device_manager,
         dashboard_publisher=publisher,
         scan_interval_s=2.0,
+        # With discovery off (servers, tests) a manual scan finds nothing instead of opening the host's ports.
+        port_lister=(lambda: []) if discovery_off else None,
     )
     discovery_service = DiscoveryService(discovery_inner)
-    if os.environ.get("HHIP_DISABLE_DISCOVERY", "").lower() not in {"1", "true", "yes"}:
+    if not discovery_off:
         discovery_service.start()
 
     app.state.job_scheduler = JobScheduler(max_workers=2, max_queued=8)
@@ -151,6 +155,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         workspace_sync=app.state.workspace_hardware_service.sync,
         force_dry_run=os.environ.get("HHIP_FIRMWARE_DRY_RUN", "").lower() in ("1", "true", "yes"),
     )
+    app.state.owners = Owners(Path(data_dir) / "owners.json")
     app.state.ws_bridge = WebSocketEventBridge(publisher)
     try:
         yield

@@ -4,12 +4,19 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from ..services.job_scheduler import JobQueueFull
+from ..services.ownership import FIRMWARE, OwnedBy, claim_from, own_only, require_owned
 
-router = APIRouter(prefix="/firmware", tags=["firmware"])
+# Firmware projects are the signer's own: sign-in for every route but the template and
+# toolchain lists, and another person's project answers 404 (audit ENG-002).
+router = APIRouter(
+    prefix="/firmware",
+    tags=["firmware"],
+    dependencies=[Depends(OwnedBy(FIRMWARE, "project_id", public=("/templates", "/toolchains")))],
+)
 
 
 class CreateProjectRequest(BaseModel):
@@ -39,16 +46,18 @@ class UploadRequest(BaseModel):
 
 class SerialRequest(BaseModel):
     action: str = ""  # pause|resume|clear|write|export
-    line: str = ""
-    port: str = ""
-    baud: int = 115200
-    query: str = ""
-    limit: int = 500
+    line: str = Field("", max_length=512)
+    port: str = Field("", max_length=200)
+    baud: int = Field(115200, ge=300, le=2_000_000)
+    query: str = Field("", max_length=200)
+    limit: int = Field(500, ge=1, le=1000)
 
 
 @router.get("/projects")
 def list_projects(request: Request) -> dict[str, Any]:
-    return request.app.state.firmware_service.list_projects()
+    result = request.app.state.firmware_service.list_projects()
+    projects = own_only(request, FIRMWARE, request.state.owner, result.get("projects", []), ("project_id",))
+    return {**result, "projects": projects, "count": len(projects)}
 
 
 @router.post("/projects")
@@ -56,7 +65,7 @@ def create_project(body: CreateProjectRequest, request: Request) -> dict[str, An
     data = body.model_dump()
     if data.get("template") and not data.get("template_id"):
         data["template_id"] = data["template"]
-    return request.app.state.firmware_service.create_project(data)
+    return claim_from(request, FIRMWARE, request.state.owner, request.app.state.firmware_service.create_project(data), ("project_id",))
 
 
 @router.get("/projects/{project_id}")
@@ -89,6 +98,7 @@ def toolchains(request: Request) -> dict[str, Any]:
 
 @router.post("/build")
 def build_firmware(body: BuildRequest, request: Request) -> dict[str, Any]:
+    require_owned(request, FIRMWARE, body.project_id, request.state.owner)
     try:
         return request.app.state.firmware_service.build(body.project_id, use_cache=body.use_cache)
     except KeyError as exc:
@@ -97,6 +107,7 @@ def build_firmware(body: BuildRequest, request: Request) -> dict[str, Any]:
 
 @router.post("/build/jobs", status_code=status.HTTP_202_ACCEPTED)
 def queue_firmware_build(body: BuildRequest, request: Request) -> dict[str, Any]:
+    require_owned(request, FIRMWARE, body.project_id, request.state.owner)
     try:
         request.app.state.firmware_service.get_project(body.project_id)
     except KeyError as exc:
@@ -116,6 +127,7 @@ def queue_firmware_build(body: BuildRequest, request: Request) -> dict[str, Any]
 
 @router.post("/upload")
 def upload_firmware(body: UploadRequest, request: Request) -> dict[str, Any]:
+    require_owned(request, FIRMWARE, body.project_id, request.state.owner)
     try:
         return request.app.state.firmware_service.upload(
             body.project_id, port=body.port, build_id=body.build_id
@@ -125,15 +137,15 @@ def upload_firmware(body: UploadRequest, request: Request) -> dict[str, Any]:
 
 
 @router.get("/logs")
-def firmware_logs(request: Request, limit: int = 200) -> dict[str, Any]:
+def firmware_logs(request: Request, limit: int = Query(200, ge=1, le=1000)) -> dict[str, Any]:
     return request.app.state.firmware_service.logs(limit=limit)
 
 
 @router.get("/serial")
 def get_serial(
     request: Request,
-    limit: int = 500,
-    query: str = "",
+    limit: int = Query(500, ge=1, le=1000),
+    query: str = Query("", max_length=200),
 ) -> dict[str, Any]:
     return request.app.state.firmware_service.serial(limit=limit, query=query)
 

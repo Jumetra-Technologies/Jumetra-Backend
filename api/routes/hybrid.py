@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+import os
+import re
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 
@@ -16,7 +19,8 @@ class HybridCreateRequest(BaseModel):
 
 
 class HybridAdvanceRequest(BaseModel):
-    delta_ms: int = 100
+    # One request simulates at most a minute, forward only (audit ENG-004: 1e8 ms pinned a worker).
+    delta_ms: int = Field(100, ge=1, le=60_000)
 
 
 class PhysicalConnectRequest(BaseModel):
@@ -37,7 +41,13 @@ class PinConnectionRequest(BaseModel):
     workspace_id: str = ""
 
 
-router = APIRouter(prefix="/hybrid", tags=["hybrid"])
+from ..services.ownership import HYBRID, OwnedBy, claim_from, own_only
+
+# Hybrid experiments are the signer's own; another person's id answers 404 (audit ENG-002).
+router = APIRouter(prefix="/hybrid", tags=["hybrid"], dependencies=[Depends(OwnedBy(HYBRID, "experiment_id", public=("/profiles",)))])
+_IDS = ("experiment_id", "id")
+# /dev/ttyACM0, /dev/cu.usbmodem1101, COM3: a device path or a Windows COM port, nothing else.
+_SERIAL_PORT = re.compile(r"(/dev/[A-Za-z0-9._-]{1,64}|COM[0-9]{1,3})")
 
 
 # ---- Sprint 27/28 physical device routes (must precede /{experiment_id}) ----
@@ -57,6 +67,13 @@ def list_hardware_profiles(request: Request) -> dict:
 
 @router.post("/devices/connect")
 def connect_physical_device(body: PhysicalConnectRequest, request: Request) -> dict:
+    # A server in the cloud can't reach anyone's USB board; letting it open whatever the request
+    # names (pyserial's socket:// and rfc2217:// handlers, SSH, MQTT) is an SSRF (audit ENG-006).
+    if os.environ.get("HHIP_DISABLE_DISCOVERY", "").lower() in {"1", "true", "yes"}:
+        raise HTTPException(status_code=501, detail="Connecting a board happens in the Kiungo desktop app, not on this server.")
+    target = body.endpoint or body.port
+    if "://" in target or (body.transport or "serial") in {"serial", "memory"} and not _SERIAL_PORT.fullmatch(target or "x"):
+        raise HTTPException(status_code=400, detail="Name a serial port, like /dev/ttyACM0 or COM3.")
     try:
         return request.app.state.hybrid_service.connect_physical_device(
             port=body.port,
@@ -106,14 +123,14 @@ def list_pin_connections(request: Request) -> dict:
 @router.post("/create")
 def create_hybrid_experiment(body: HybridCreateRequest, request: Request) -> dict:
     try:
-        return request.app.state.hybrid_service.create(
+        return claim_from(request, HYBRID, request.state.owner, request.app.state.hybrid_service.create(
             name=body.name,
             controller_id=body.controller_id,
             component_ids=body.component_ids,
             device_modes=body.device_modes,
             physical_device_id=body.physical_device_id,
             simulator_backend=body.simulator_backend,
-        )
+        ), _IDS)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
@@ -122,7 +139,7 @@ def create_hybrid_experiment(body: HybridCreateRequest, request: Request) -> dic
 
 @router.get("/")
 def list_hybrid_experiments(request: Request) -> list:
-    return request.app.state.hybrid_service.list_experiments()
+    return own_only(request, HYBRID, request.state.owner, request.app.state.hybrid_service.list_experiments(), _IDS)
 
 
 @router.get("/{experiment_id}")

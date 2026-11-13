@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 
@@ -15,7 +15,8 @@ class LaboratoryCreateRequest(BaseModel):
 
 
 class AdvanceRequest(BaseModel):
-    delta_ms: int = 100
+    # One request simulates at most a minute, forward only (audit ENG-004: 1e8 ms pinned a worker).
+    delta_ms: int = Field(100, ge=1, le=60_000)
 
 
 class ActuatorCommandRequest(BaseModel):
@@ -24,19 +25,22 @@ class ActuatorCommandRequest(BaseModel):
     value: object = None
 
 
-router = APIRouter(prefix="/laboratory", tags=["laboratory"])
+from ..services.ownership import LABORATORY, OwnedBy, claim_from
+
+# Laboratories are the signer's own; another person's id answers 404 (audit ENG-002).
+router = APIRouter(prefix="/laboratory", tags=["laboratory"], dependencies=[Depends(OwnedBy(LABORATORY, "laboratory_id"))])
 
 
 @router.post("/create")
 def create_laboratory(body: LaboratoryCreateRequest, request: Request) -> dict:
     try:
-        return request.app.state.laboratory_service.create(
+        return claim_from(request, LABORATORY, request.state.owner, request.app.state.laboratory_service.create(
             name=body.name,
             controller_id=body.controller_id,
             component_ids=body.component_ids,
             description=body.description,
             metadata=body.metadata,
-        )
+        ), ("laboratory_id", "id"))
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
