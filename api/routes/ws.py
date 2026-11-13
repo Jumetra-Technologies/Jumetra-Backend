@@ -9,7 +9,7 @@ from typing import Any, Callable
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from engine.events.dashboard_publisher import DashboardEvent, DashboardEventPublisher
-from security.websocket_auth import authenticate_websocket
+from security.websocket_auth import authenticate_websocket, websocket_owner
 
 router = APIRouter(tags=["websocket"])
 
@@ -233,7 +233,7 @@ async def websocket_firmware(websocket: WebSocket) -> None:
 @router.websocket("/ws/workspace/{workspace_id}")
 async def websocket_workspace(websocket: WebSocket, workspace_id: str) -> None:
     """Sprint 26 alias — engineering workspace realtime stream."""
-    if not authenticate_websocket(websocket):
+    if not authenticate_websocket(websocket) or not websocket.app.state.owners.owns("workspace", workspace_id, websocket_owner(websocket)):
         await websocket.close(code=1008)
         return
     await websocket.accept()

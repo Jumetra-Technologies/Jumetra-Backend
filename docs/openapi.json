@@ -131,6 +131,8 @@
         "properties": {
           "delta_ms": {
             "default": 100,
+            "maximum": 60000.0,
+            "minimum": 1.0,
             "title": "Delta Ms",
             "type": "integer"
           }
@@ -1670,6 +1672,8 @@
         "properties": {
           "delta_ms": {
             "default": 100,
+            "maximum": 60000.0,
+            "minimum": 1.0,
             "title": "Delta Ms",
             "type": "integer"
           }
@@ -2375,6 +2379,8 @@
         "properties": {
           "delta_ms": {
             "default": 100,
+            "maximum": 60000.0,
+            "minimum": 1.0,
             "title": "Delta Ms",
             "type": "integer"
           }
@@ -2632,26 +2638,33 @@
           },
           "baud": {
             "default": 115200,
+            "maximum": 2000000.0,
+            "minimum": 300.0,
             "title": "Baud",
             "type": "integer"
           },
           "limit": {
             "default": 500,
+            "maximum": 1000.0,
+            "minimum": 1.0,
             "title": "Limit",
             "type": "integer"
           },
           "line": {
             "default": "",
+            "maxLength": 512,
             "title": "Line",
             "type": "string"
           },
           "port": {
             "default": "",
+            "maxLength": 200,
             "title": "Port",
             "type": "string"
           },
           "query": {
             "default": "",
+            "maxLength": 200,
             "title": "Query",
             "type": "string"
           }
@@ -7104,6 +7117,8 @@
             "required": false,
             "schema": {
               "default": 200,
+              "maximum": 1000,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -7311,6 +7326,8 @@
             "required": false,
             "schema": {
               "default": 500,
+              "maximum": 1000,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -7321,6 +7338,7 @@
             "required": false,
             "schema": {
               "default": "",
+              "maxLength": 200,
               "title": "Query",
               "type": "string"
             }

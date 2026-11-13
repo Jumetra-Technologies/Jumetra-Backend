@@ -239,6 +239,9 @@ class HardwareDiscoveryService:
     def _publish_connected(self, device: DiscoveredDevice, *, partial: bool = False) -> None:
         payload = device.to_dict()
         payload["partial"] = partial
+        # The id goes as the first argument; left in the payload too it raised TypeError
+        # ("multiple values for argument 'device_id'") for every real port (audit ENG-003).
+        payload.pop("device_id", None)
         self._publish_bus(DeviceLifecycleEvent.CONNECTED, device)
         if self._dashboard:
             self._dashboard.publish_device_connected(
@@ -249,6 +252,7 @@ class HardwareDiscoveryService:
     def _publish_disconnected(self, device: DiscoveredDevice, *, previous_id: Optional[str]) -> None:
         payload = device.to_dict()
         payload["previous_device_id"] = previous_id
+        payload.pop("device_id", None)
         self._publish_bus(DeviceLifecycleEvent.DISCONNECTED, device)
         if self._dashboard:
             self._dashboard.publish_device_disconnected(

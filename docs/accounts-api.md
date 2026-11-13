@@ -76,3 +76,26 @@ CORS with credentials, and the origin check on cookie writes, trust:
 Hosting domains anyone can publish on (`*.web.app`, `*.firebaseapp.com`,
 `*.hosted.app`, `*.run.app`) aren't trusted by pattern. `X-Forwarded-Origin`
 is ignored: only the browser's own `Origin` header counts.
+
+## Phase One objects belong to their maker
+
+Hybrid experiments (`/hybrid/*`), engineering workspaces
+(`/engineering/workspace/*`) and laboratories (`/laboratory/*`) are kept per
+account (`api/services/ownership.py`). Firmware projects (`/firmware/*`) follow
+the same rules, with the owner kept in each project's metadata
+(`engine/firmware/firmware_studio.py`, #17):
+
+- Every route needs a signed-in caller (`401` otherwise), except the firmware
+  template and toolchain lists, the Hybrid board profiles and the workspace
+  part catalog.
+- A create records the caller as the owner; lists return only the caller's own.
+- An id that belongs to someone else answers `404`, like one that doesn't exist.
+  WebSocket streams of a workspace close (`1008`) for anyone but its owner.
+- Owners are kept in `<data dir>/owners.json`, written atomically. Objects made before this change have no owner and can't be
+  opened; they lived in memory or in `/tmp` and are gone after a restart anyway.
+- With `HHIP_REQUIRE_AUTH=false` a signed-out caller is the single owner `local`.
+
+`POST /hybrid/devices/connect` answers `501` on a server with discovery off
+(`HHIP_DISABLE_DISCOVERY=1`, as on Render): boards connect through the desktop
+app. On a local install it opens serial ports only (`/dev/...` or `COMn`).
+Simulation steps (`delta_ms`) are 1 to 60 000 ms.

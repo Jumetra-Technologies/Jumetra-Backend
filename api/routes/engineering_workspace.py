@@ -7,11 +7,19 @@ workspace API surface.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
-from security.websocket_auth import authenticate_websocket
+from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
+from security.websocket_auth import authenticate_websocket, websocket_owner
 from pydantic import BaseModel, Field
 
-router = APIRouter(prefix="/engineering/workspace", tags=["engineering-workspace"])
+from ..services.ownership import WORKSPACE, OwnedBy, claim_from, own_only
+
+# Workspaces are the signer's own; another person's id answers 404 (audit ENG-002).
+# The part catalog stays open to everyone.
+router = APIRouter(
+    prefix="/engineering/workspace",
+    tags=["engineering-workspace"],
+    dependencies=[Depends(OwnedBy(WORKSPACE, "workspace_id", public=("/catalog",)))],
+)
 
 
 class CreateWorkspaceRequest(BaseModel):
@@ -24,7 +32,8 @@ class RunRequest(BaseModel):
 
 
 class StepRequest(BaseModel):
-    delta_ms: int = 100
+    # One request simulates at most a minute, forward only (audit ENG-004: 1e8 ms pinned a worker).
+    delta_ms: int = Field(100, ge=1, le=60_000)
 
 
 class AddNodeRequest(BaseModel):
@@ -89,13 +98,17 @@ def catalog(
 
 @router.get("")
 def list_workspaces(request: Request) -> list:
-    return request.app.state.engineering_workspace_service.list_workspaces()
+    return own_only(request, WORKSPACE, request.state.owner, request.app.state.engineering_workspace_service.list_workspaces(), ("workspace_id",))
 
 
 @router.post("")
 def create_workspace(body: CreateWorkspaceRequest, request: Request) -> dict:
-    return request.app.state.engineering_workspace_service.create(
-        name=body.name, project_id=body.project_id
+    return claim_from(
+        request,
+        WORKSPACE,
+        request.state.owner,
+        request.app.state.engineering_workspace_service.create(name=body.name, project_id=body.project_id),
+        ("workspace_id",),
     )
 
 
@@ -257,7 +270,7 @@ def send_serial(workspace_id: str, body: SerialRequest, request: Request) -> dic
 @router.websocket("/ws/{workspace_id}")
 async def workspace_ws(websocket: WebSocket, workspace_id: str) -> None:
     """Realtime workspace stream — polls state without modifying Event Bus."""
-    if not authenticate_websocket(websocket):
+    if not authenticate_websocket(websocket) or not websocket.app.state.owners.owns(WORKSPACE, workspace_id, websocket_owner(websocket)):
         await websocket.close(code=1008)
         return
     await websocket.accept()

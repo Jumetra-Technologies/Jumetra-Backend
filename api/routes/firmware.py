@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 
 from auth.routes import current_user_id
@@ -65,11 +65,11 @@ class UploadRequest(BaseModel):
 
 class SerialRequest(BaseModel):
     action: str = ""  # pause|resume|clear|write|export
-    line: str = ""
-    port: str = ""
-    baud: int = 115200
-    query: str = ""
-    limit: int = 500
+    line: str = Field("", max_length=512)
+    port: str = Field("", max_length=200)
+    baud: int = Field(115200, ge=300, le=2_000_000)
+    query: str = Field("", max_length=200)
+    limit: int = Field(500, ge=1, le=1000)
 
 
 @router.get("/projects")
@@ -151,7 +151,7 @@ def upload_firmware(body: UploadRequest, request: Request, owner: str = Depends(
 
 
 @router.get("/logs")
-def firmware_logs(request: Request, limit: int = 200, _owner: str = Depends(firmware_owner)) -> dict[str, Any]:
+def firmware_logs(request: Request, limit: int = Query(200, ge=1, le=1000), _owner: str = Depends(firmware_owner)) -> dict[str, Any]:
     return request.app.state.firmware_service.logs(limit=limit)
 
 
@@ -159,8 +159,8 @@ def firmware_logs(request: Request, limit: int = 200, _owner: str = Depends(firm
 def get_serial(
     request: Request,
     _owner: str = Depends(firmware_owner),
-    limit: int = 500,
-    query: str = "",
+    limit: int = Query(500, ge=1, le=1000),
+    query: str = Query("", max_length=200),
 ) -> dict[str, Any]:
     return request.app.state.firmware_service.serial(limit=limit, query=query)
 

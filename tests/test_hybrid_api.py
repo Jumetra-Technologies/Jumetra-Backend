@@ -72,7 +72,8 @@ class TestHybridAPI:
         assert resp.status_code == 200
         assert resp.json()["count"] == 0
 
-    def test_connect_physical_device_api(self, client):
+    def test_connect_physical_device_api(self, client, monkeypatch):
+        monkeypatch.delenv("HHIP_DISABLE_DISCOVERY", raising=False)  # a local install: boards can be connected
         engine_side, device_side = make_adapter_pair(timeout=0.2)
         layer = client.app.state.hybrid_service._physical  # noqa: SLF001
         layer._transport_factory = lambda _: engine_side  # noqa: SLF001
@@ -85,7 +86,7 @@ class TestHybridAPI:
         threading.Thread(target=boot, daemon=True).start()
         resp = client.post(
             "/hybrid/devices/connect",
-            json={"port": "COM_API", "board_type": "esp32", "device_id": "esp32_api"},
+            json={"port": "COM7", "board_type": "esp32", "device_id": "esp32_api"},
         )
         assert resp.status_code == 200
         body = resp.json()
