@@ -8,11 +8,19 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from api.db.enums import Role
-from api.db.models import Organization, User
+from api.db.models import Organization, PlatformExperiment, Project, User
 
 from .models import (
     AccessToken,
+    ActivityDaily,
+    ActivityPresence,
+    Consent,
     CookieSession,
+    CrashReport,
+    FileBlob,
+    ProjectRevision,
+    SyncedFile,
+    SyncedProject,
     DesktopAuthCode,
     Device,
     LabSessionRecord,
@@ -46,7 +54,17 @@ class ProviderConflict(Exception):
 
 
 class EmailTaken(Exception):
-    """An account with this email exists, and this sign-in's email isn't verified."""
+    """An account with this email exists, and this sign-in can't be joined to it by email.
+
+    Either this sign-in's email isn't verified, or the account's own email never was:
+    an account made from an unverified email could belong to someone who doesn't own
+    the address, so a verified sign-in is never merged into it (that would hand the
+    real owner's sign-ins to them).
+    """
+
+
+class RefreshSpent(Exception):
+    """The refresh token was already used (or revoked) by the time this request tried to use it."""
 
 
 def _find_by_provider(session: Session, provider: str, provider_user_id: str) -> OAuthAccount | None:
@@ -65,6 +83,12 @@ def _profile_for(session: Session, user: User) -> UserProfile:
         session.add(profile)
         session.flush()
     return profile
+
+
+def _email_verified(session: Session, user: User) -> bool:
+    """Whether a provider has ever confirmed that this account's owner owns its email."""
+    profile = session.scalar(select(UserProfile).where(UserProfile.user_id == user.id))
+    return bool(profile is not None and profile.email_verified)
 
 
 def upsert_provider_user(
@@ -92,7 +116,9 @@ def upsert_provider_user(
     if user is None and firebase_uid:
         user = session.scalar(select(User).where(User.firebase_uid == firebase_uid))
     if user is None and email_verified:
-        user = session.scalar(select(User).where(User.email == email))
+        candidate = session.scalar(select(User).where(User.email == email))
+        if candidate is not None and _email_verified(session, candidate):
+            user = candidate
     if user is None:
         if session.scalar(select(User.id).where(User.email == email)) is not None:
             raise EmailTaken(email)
@@ -158,8 +184,18 @@ def linked_providers(session: Session, user_id: str) -> list[str]:
 
 
 def delete_user(session: Session, user: User) -> None:
-    """Remove the person and everything stored under their account."""
+    """Remove the person and everything stored under their account.
+
+    Every table keyed by the account is listed here, because SQLite (local and test databases)
+    doesn't enforce the foreign keys' ON DELETE rules. Synced desktop projects, their files,
+    revisions and blobs, consents, crash reports and usage counts were missed before
+    (audit API-006); tests/test_account_data.py checks every table with a user or owner column.
+    """
     user_id = user.id
+    for experiment in session.scalars(
+        select(PlatformExperiment).join(Project, Project.id == PlatformExperiment.project_id).where(Project.owner_id == user_id)
+    ):
+        session.delete(experiment)
     for model in (UserProjectExperiment,):
         for row in session.scalars(
             select(model).join(UserProject, UserProject.id == model.project_id).where(UserProject.owner_id == user_id)
@@ -177,6 +213,15 @@ def delete_user(session: Session, user: User) -> None:
         (CookieSession, CookieSession.user_id),
         (LoginSession, LoginSession.user_id),
         (WebSocketTicket, WebSocketTicket.user_id),
+        (Project, Project.owner_id),
+        (SyncedFile, SyncedFile.owner_id),
+        (ProjectRevision, ProjectRevision.owner_id),
+        (FileBlob, FileBlob.owner_id),
+        (SyncedProject, SyncedProject.owner_id),
+        (Consent, Consent.user_id),
+        (CrashReport, CrashReport.user_id),
+        (ActivityPresence, ActivityPresence.user_id),
+        (ActivityDaily, ActivityDaily.user_id),
     ):
         for row in session.scalars(select(model).where(col == user_id)):
             session.delete(row)
@@ -262,6 +307,25 @@ def get_valid_refresh(session: Session, raw: str) -> RefreshToken | None:
     return row
 
 
+def spend_refresh(session: Session, row: RefreshToken) -> None:
+    """Mark a refresh token used, atomically: only one request can ever spend it.
+
+    Two requests that read the same live token both see ``revoked = false``; the
+    conditional UPDATE lets exactly one of them flip it. The other gets RefreshSpent,
+    which the routes treat as a replay.
+    """
+    result = session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.id == row.id, RefreshToken.revoked.is_(False))
+        .values(revoked=True)
+        .execution_options(synchronize_session=False)
+    )
+    if result.rowcount != 1:
+        session.rollback()
+        raise RefreshSpent()
+    row.revoked = True
+
+
 def rotate_refresh(
     session: Session,
     old: RefreshToken,
@@ -271,13 +335,16 @@ def rotate_refresh(
     refresh_raw: str,
     refresh_expires: datetime,
 ) -> None:
-    old.revoked = True
-    session.add(AccessToken(user_id=old.user_id, jti=access_jti, expires_at=access_expires))
+    """Spend ``old`` and issue its successor, for the same client and device."""
+    spend_refresh(session, old)
+    session.add(AccessToken(user_id=old.user_id, jti=access_jti, expires_at=access_expires, device_id=old.device_id))
     session.add(
         RefreshToken(
             user_id=old.user_id,
             token_hash=hash_token(refresh_raw),
             expires_at=refresh_expires,
+            client=old.client,
+            device_id=old.device_id,
         )
     )
 

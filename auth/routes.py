@@ -29,9 +29,11 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from api.db.models import User
-from database.models import UserProfile, WebSocketTicket
+from database.models import AccessToken, UserProfile, WebSocketTicket
+from security.origins import is_allowed_origin
 from database.service import (
     EmailTaken,
+    RefreshSpent,
     ProviderConflict,
     create_login_records,
     delete_user,
@@ -224,7 +226,9 @@ def _user_from_access(request: Request, session: Session, access: str) -> User |
 
 def _rotate_session(request: Request, response: Response, session: Session, refresh_raw: str) -> dict[str, Any]:
     row = get_valid_refresh(session, refresh_raw)
-    if row is None:
+    # Desktop refresh tokens belong to a device and rotate only through /auth/desktop/refresh;
+    # accepted here they would come back as web tokens that outlive removing the device.
+    if row is None or row.client != "web":
         clear_auth_cookies(response)
         raise HTTPException(status_code=401, detail="Your session has expired. Sign in again.")
     user = session.get(User, row.user_id)
@@ -232,14 +236,26 @@ def _rotate_session(request: Request, response: Response, session: Session, refr
         raise HTTPException(status_code=401, detail="Not signed in.")
     new_access, jti, access_exp = issue_access(user.id, _secret(request))
     new_refresh, refresh_exp = issue_refresh()
-    rotate_refresh(session, row, access_jti=jti, access_expires=access_exp, refresh_raw=new_refresh, refresh_expires=refresh_exp)
+    try:
+        rotate_refresh(session, row, access_jti=jti, access_expires=access_exp, refresh_raw=new_refresh, refresh_expires=refresh_exp)
+    except RefreshSpent:
+        # Another request spent this token a moment ago: only one may.
+        clear_auth_cookies(response)
+        raise HTTPException(status_code=401, detail="Your session has expired. Sign in again.") from None
     session.commit()
     set_auth_cookies(response, new_access, new_refresh)
     return _session_payload(session, user, new_access, new_refresh)
 
 
 def current_user_id(request: Request, response: Response) -> str:
-    """The signed-in person's id, from the bearer token, the access cookie or a refresh."""
+    """The signed-in person's id, from the bearer token, the access cookie or a refresh.
+
+    Once per request: when the write middleware has already signed the caller in (and maybe
+    rotated their cookies), its answer is used.
+    """
+    resolved = getattr(request.state, "user_id", None)
+    if isinstance(resolved, str) and resolved:
+        return resolved
     factory = _factory(request)
     access = bearer_token(request) or request.cookies.get(ACCESS_COOKIE)
     refresh = _read_refresh(request)
@@ -389,7 +405,11 @@ def delete_me(request: Request, response: Response, user_id: str = Depends(curre
             delete_user(session, user)
             session.commit()
     clear_auth_cookies(response)
-    return Response(status_code=204, headers=dict(response.headers))
+    # Copy every header line: a dict of the headers kept only one of the two Set-Cookie lines,
+    # so the refresh cookie survived the deletion (audit API-024).
+    done = Response(status_code=204)
+    done.raw_headers.extend((k, v) for k, v in response.raw_headers if k.lower() == b"set-cookie")
+    return done
 
 
 @router.get("/users/search")
@@ -402,11 +422,13 @@ def search_users(
     needle = q.strip().lower()
     if len(needle) < 2:
         return []
+    # LIKE wildcards in the text are matched literally: "%" would otherwise list everyone.
+    pattern = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
     with _factory(request)() as session:
         rows = session.scalars(
             select(User)
             .where(User.last_login_at.is_not(None))
-            .where(or_(func.lower(User.display_name).like(f"{needle}%"), func.lower(User.email).like(f"{needle}%")))
+            .where(or_(func.lower(User.display_name).like(pattern, escape="\\"), func.lower(User.email).like(pattern, escape="\\")))
             .order_by(User.display_name)
             .limit(10)
         ).all()
@@ -414,22 +436,43 @@ def search_users(
 
 
 @router.post("/logout")
-def logout(request: Request, response: Response, body: RefreshBody | None = None) -> dict[str, str]:
-    access = bearer_token(request) or request.cookies.get(ACCESS_COOKIE)
+def logout(
+    request: Request,
+    response: Response,
+    body: RefreshBody | None = None,
+    everywhere: bool = Query(default=False, description="End every session of the account, on every device."),
+) -> dict[str, str]:
+    """End this session: the presented access and refresh tokens. ``?everywhere=true`` ends them all.
+
+    A request that relies on the browser's cookies (no bearer token) must come from one of
+    Kiungo's websites, so another site can't sign people out (CSRF).
+    """
+    access = bearer_token(request)
+    if not access:
+        origin = request.headers.get("origin")
+        if origin is not None and not is_allowed_origin(origin, request.app.state.allowed_origins, request.app.state.origin_pattern):
+            raise HTTPException(status_code=403, detail="Untrusted request origin")
+        access = request.cookies.get(ACCESS_COOKIE)
     refresh = _read_refresh(request, body)
     with _factory(request)() as session:
-        user_id = None
+        claims: dict[str, Any] | None = None
         if access:
             try:
-                user_id = decode_access(access, _secret(request)).get("sub")
-            except Exception:
-                pass
-        if user_id is None and refresh:
-            row = get_valid_refresh(session, refresh)
-            if row:
-                user_id = row.user_id
-        if user_id:
+                claims = decode_access(access, _secret(request))
+            except Exception:  # an expired or forged token: nothing of it to end
+                claims = None
+        row = get_valid_refresh(session, refresh) if refresh else None
+        if row is not None and row.client != "web":
+            row = None  # desktop sessions end through /auth/desktop/logout or by removing the device
+        user_id = (claims or {}).get("sub") or (row.user_id if row else None)
+        if user_id and everywhere:
             revoke_user_sessions(session, user_id)
-            session.commit()
+        else:
+            if row is not None:
+                row.revoked = True
+            if claims and claims.get("jti"):
+                for token in session.scalars(select(AccessToken).where(AccessToken.jti == claims["jti"], AccessToken.user_id == claims.get("sub"))):
+                    token.revoked = True
+        session.commit()
     clear_auth_cookies(response)
     return {"status": "ok"}

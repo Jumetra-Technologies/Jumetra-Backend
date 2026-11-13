@@ -86,10 +86,17 @@ def _cors_origins() -> list[str]:
 
 
 def _cors_origin_regex() -> str:
-    return (
-        r"https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?|"
-        r"https://[a-z0-9.-]+\.(web\.app|firebaseapp\.com|hosted\.app|run\.app)"
-    )
+    """Origins trusted by pattern, beyond the exact list: this computer's dev servers only.
+
+    Not ``*.web.app``, ``*.firebaseapp.com``, ``*.hosted.app`` or ``*.run.app``: anyone can host
+    a page there, and with credentials allowed it could call the API as the visitor (audit API-005).
+    Addresses on the local network (192.168.x.x, for testing on a phone) need
+    ``HHIP_ALLOW_LAN_ORIGINS=1``.
+    """
+    hosts = r"localhost|127\.0\.0\.1"
+    if os.environ.get("HHIP_ALLOW_LAN_ORIGINS", "").lower() in {"1", "true", "yes"}:
+        hosts += r"|192\.168\.\d{1,3}\.\d{1,3}"
+    return rf"https?://({hosts})(:\d+)?"
 
 
 @asynccontextmanager

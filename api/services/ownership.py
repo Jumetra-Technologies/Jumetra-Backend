@@ -1,5 +1,6 @@
-"""Who owns each Phase One object: firmware projects, Hybrid experiments,
-engineering workspaces and laboratories.
+"""Who owns each Phase One object: Hybrid experiments, engineering workspaces
+and laboratories. (Firmware projects keep their owner in their own metadata,
+engine/firmware/firmware_studio.py, with the same rules.)
 
 These objects live in process-wide services keyed only by id, so before this
 module any signed-in person could read, change or delete anyone's, and every
@@ -8,8 +9,7 @@ firmware source code included (audit ENG-002, 13 Nov 2026).
 
 Now every create records its owner here, lists show only the caller's own,
 and an id that belongs to someone else answers 404, as if it didn't exist.
-The record is a small JSON file in the data folder, written atomically, so
-firmware projects (kept on disk) keep their owner across restarts.
+The record is a small JSON file in the data folder, written atomically.
 
 With ``HHIP_REQUIRE_AUTH=false`` (local development and most tests) a
 signed-out caller is the single local owner ``"local"``.
@@ -29,7 +29,6 @@ from starlette.requests import HTTPConnection
 
 LOCAL_OWNER = "local"
 
-FIRMWARE = "firmware"
 HYBRID = "hybrid"
 WORKSPACE = "workspace"
 LABORATORY = "laboratory"
