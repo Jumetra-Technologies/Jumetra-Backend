@@ -54,7 +54,10 @@ def require_admin(request: Request) -> AdminSession:
 def admin_sign_in(body: PasswordBody, request: Request, response: Response) -> AdminSessionOut:
     response.headers.update(NO_STORE)
     with request.app.state.db_factory() as session:
-        token, expires, wait = admin_auth.sign_in(session, password=body.password, ip_hash=_ip_hash(request), secret=request.app.state.session_secret)
+        try:
+            token, expires, wait = admin_auth.sign_in(session, password=body.password, ip_hash=_ip_hash(request), secret=request.app.state.session_secret)
+        except admin_auth.AdminNotConfigured as exc:
+            raise HTTPException(status_code=503, detail=str(exc), headers=NO_STORE) from exc
     if wait:
         minutes = max(1, round(wait / 60))
         raise HTTPException(

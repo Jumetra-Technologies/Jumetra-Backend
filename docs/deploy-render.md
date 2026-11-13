@@ -37,9 +37,9 @@ them to every visitor.
 3. Render reads `render.yaml` and asks for the values marked `sync: false`:
    - `DATABASE_URL`: the Neon connection string from step 1
    - `FIREBASE_API_KEY` and `FIREBASE_APP_ID`: from step 2
-   - `HHIP_ADMIN_PASSWORD_HASH`: leave it empty to keep the admin password set
-     on 6 November, or paste the output of
-     `python -m api.services.admin_auth 'new password'`
+   - `HHIP_ADMIN_PASSWORD_HASH`: required for the admin portal. Paste the output of
+     `python -m api.services.admin_auth 'new password'`. Without it, admin
+     sign-in answers 503: the built-in default is only for local development.
 4. Choose **Apply**. The first deploy takes a few minutes. When it's live,
    `https://<service>.onrender.com/health` answers `{"status": "ok"}`.
 5. Copy the service's address (shown at the top of its page). The website and

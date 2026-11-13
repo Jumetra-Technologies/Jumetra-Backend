@@ -77,7 +77,7 @@ async def heartbeat(request: Request) -> Response:
 
     has_token = bearer_token(request) is not None
     if not has_token:
-        origin = request.headers.get("x-forwarded-origin") or request.headers.get("origin")
+        origin = request.headers.get("origin")
         if not is_allowed_origin(origin, request.app.state.allowed_origins, request.app.state.origin_pattern):
             raise HTTPException(status_code=403, detail="Untrusted request origin")
 
@@ -112,7 +112,7 @@ async def forget_visitor(request: Request) -> Response:
         body = ForgetVisitor.model_validate(json.loads(raw or b"{}"))
     except (ValueError, ValidationError):
         raise HTTPException(status_code=422, detail="Name the visitor id to forget.")
-    origin = request.headers.get("x-forwarded-origin") or request.headers.get("origin")
+    origin = request.headers.get("origin")
     if not is_allowed_origin(origin, request.app.state.allowed_origins, request.app.state.origin_pattern):
         raise HTTPException(status_code=403, detail="Untrusted request origin")
     with request.app.state.db_factory() as session:

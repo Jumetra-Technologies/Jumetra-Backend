@@ -46,13 +46,13 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
         # origins pass. So it needs a valid session, but no website origin.
         bearer = request.headers.get("authorization", "").lower().startswith("bearer ")
 
-        origin = request.headers.get("x-forwarded-origin") or request.headers.get("origin")
+        origin = request.headers.get("origin")
         if not bearer and not is_allowed_origin(origin, self.allowed_origins, self.origin_pattern):
             return JSONResponse({"detail": "Untrusted request origin"}, status_code=403)
 
         auth_response = Response()
         try:
-            current_user(request, auth_response)
+            user = current_user(request, auth_response)
         except HTTPException as exc:
             response = JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
             for name, value in auth_response.raw_headers:
@@ -60,6 +60,10 @@ class AuthenticatedWriteMiddleware(BaseHTTPMiddleware):
                     response.raw_headers.append((name, value))
             return response
 
+        # The route reads the user from here (auth.routes.current_user_id). Resolving it again
+        # would read the refresh cookie this check may just have rotated, and fail with 401:
+        # the first write after the 15-minute access token ran out did (audit API-007).
+        request.state.user_id = user["id"]
         response = await call_next(request)
         for name, value in auth_response.raw_headers:
             if name.lower() == b"set-cookie":

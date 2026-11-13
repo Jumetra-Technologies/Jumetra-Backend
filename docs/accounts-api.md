@@ -63,3 +63,15 @@ A project: `id`, `owner_id`, `name`, `description`, `objectives`,
 The server starts without Firebase credentials. Sign-in routes answer `503`
 until `FIREBASE_CREDENTIALS` (or `credentials/firebase-adminsdk.json`) is in
 place; everything else works, and the tests replace the token verifier.
+
+## Which websites may call the API with the visitor's cookies
+
+CORS with credentials, and the origin check on cookie writes, trust:
+
+- the exact origins in `HHIP_CORS_ORIGINS` (or the built-in list in `api/main.py`);
+- `http(s)://localhost` and `127.0.0.1` on any port, for development;
+- `192.168.x.x` addresses only with `HHIP_ALLOW_LAN_ORIGINS=1`.
+
+Hosting domains anyone can publish on (`*.web.app`, `*.firebaseapp.com`,
+`*.hosted.app`, `*.run.app`) aren't trusted by pattern. `X-Forwarded-Origin`
+is ignored: only the browser's own `Origin` header counts.
