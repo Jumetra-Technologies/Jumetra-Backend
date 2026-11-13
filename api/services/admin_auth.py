@@ -48,8 +48,24 @@ def hash_password(password: str, *, salt: Optional[bytes] = None, n: int = 16384
     return f"scrypt:{n}:{r}:{p}:{base64.b64encode(salt).decode()}:{base64.b64encode(digest).decode()}"
 
 
+class AdminNotConfigured(RuntimeError):
+    """A deployed server has no HHIP_ADMIN_PASSWORD_HASH of its own."""
+
+
+def on_a_server() -> bool:
+    """Running deployed: Render sets RENDER, Cloud Functions/Cloud Run set K_SERVICE."""
+    return bool(os.environ.get("RENDER") or os.environ.get("K_SERVICE")) or os.environ.get("HHIP_ENV", "").lower() == "production"
+
+
 def password_hash() -> str:
-    return os.environ.get("HHIP_ADMIN_PASSWORD_HASH", "").strip() or DEFAULT_HASH
+    """The admin password's hash. DEFAULT_HASH is in this repository, so a deployed server
+    refuses it (audit N-4): anyone with the code could try passwords against it offline."""
+    configured = os.environ.get("HHIP_ADMIN_PASSWORD_HASH", "").strip()
+    if configured:
+        return configured
+    if on_a_server():
+        raise AdminNotConfigured("Set HHIP_ADMIN_PASSWORD_HASH on the server to use the admin portal.")
+    return DEFAULT_HASH
 
 
 def check_password(password: str, stored: Optional[str] = None) -> bool:
@@ -82,7 +98,7 @@ def sign_in(session: Session, *, password: str, ip_hash: str, secret: str, now: 
     wait = retry_after(session, ip_hash, now)
     if wait:
         return None, None, wait
-    ok = check_password(password)
+    ok = check_password(password, password_hash())
     session.add(AdminSignInAttempt(at=now, ip_hash=ip_hash, ok=ok))
     if not ok:
         session.commit()

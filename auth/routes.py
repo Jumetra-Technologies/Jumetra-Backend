@@ -248,7 +248,14 @@ def _rotate_session(request: Request, response: Response, session: Session, refr
 
 
 def current_user_id(request: Request, response: Response) -> str:
-    """The signed-in person's id, from the bearer token, the access cookie or a refresh."""
+    """The signed-in person's id, from the bearer token, the access cookie or a refresh.
+
+    Once per request: when the write middleware has already signed the caller in (and maybe
+    rotated their cookies), its answer is used.
+    """
+    resolved = getattr(request.state, "user_id", None)
+    if isinstance(resolved, str) and resolved:
+        return resolved
     factory = _factory(request)
     access = bearer_token(request) or request.cookies.get(ACCESS_COOKIE)
     refresh = _read_refresh(request)

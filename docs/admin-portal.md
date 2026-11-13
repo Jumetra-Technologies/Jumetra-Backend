@@ -12,8 +12,10 @@ the website for 30 minutes. `/admin` itself also asks for the password.
 
 The password is checked by this server (`POST /admin/session`), never by the
 website, whose code anyone can read. What's stored is a scrypt hash:
-`HHIP_ADMIN_PASSWORD_HASH` when it's set, otherwise `DEFAULT_HASH` in
-`api/services/admin_auth.py`.
+`HHIP_ADMIN_PASSWORD_HASH` when it's set. Locally, without it, `DEFAULT_HASH` in
+`api/services/admin_auth.py` applies. A deployed server (Render sets `RENDER`,
+Cloud Functions sets `K_SERVICE`, or `HHIP_ENV=production`) never uses the
+default: without `HHIP_ADMIN_PASSWORD_HASH`, admin sign-in answers `503`.
 
 **To change the password**, run
 
@@ -21,8 +23,9 @@ website, whose code anyone can read. What's stored is a scrypt hash:
 python -m api.services.admin_auth 'the new password'
 ```
 
-and set `HHIP_ADMIN_PASSWORD_HASH` to what it prints. Do it on production
-before sharing the portal with anyone: the default hash is in this repository.
+and set `HHIP_ADMIN_PASSWORD_HASH` to what it prints. Production needs it: the
+default hash is in this repository, where anyone with the code could try
+passwords against it.
 
 - Five wrong passwords from one address, or 30 from everywhere, in 15 minutes
   lock sign-in for that address (or everyone) until the oldest of them is 15

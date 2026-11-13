@@ -5,7 +5,7 @@
 #   DATABASE_URL              Neon's connection string (postgresql://...?sslmode=require)
 #   FIREBASE_API_KEY          from the current /auth/config (public: the website already sends it to every visitor)
 #   FIREBASE_APP_ID           from the same place
-#   HHIP_ADMIN_PASSWORD_HASH  the admin portal's password: python -m api.services.admin_auth 'password'
+#   HHIP_ADMIN_PASSWORD_HASH  the admin portal's password, required: python -m api.services.admin_auth 'password'
 services:
   - type: web
     name: kiungo-api
