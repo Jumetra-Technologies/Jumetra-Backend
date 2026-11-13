@@ -30,3 +30,36 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: python -m pytest -q -p no:cacheprovider --ignore=tests/test_component_registry_performance.py
+
+  compile-service:
+    name: Compile service (real Arduino CLI in its image)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -f compile_service/Dockerfile -t kiungo-compile .
+      - name: Start it
+        run: |
+          docker run -d --name compile -p 8080:8080 kiungo-compile
+          for i in $(seq 1 30); do curl -fsS localhost:8080/health && break; sleep 1; done
+      - name: Blink builds to Intel HEX, a mistake comes back as compiler messages, and an unsafe include is refused
+        run: |
+          set -euo pipefail
+          blink='void setup(){pinMode(13,OUTPUT);}\nvoid loop(){digitalWrite(13,HIGH);delay(500);digitalWrite(13,LOW);delay(500);}\n'
+          post() { curl -sS -o "$2" -w '%{http_code} %{time_total}s\n' -H 'Content-Type: application/json' -H 'X-Forwarded-For: 192.0.2.'"$3" -d "$1" localhost:8080/firmware/compile; }
+          echo "Blink (first):"; post "{\"board\":\"arduino-uno\",\"files\":[{\"path\":\"Blink.ino\",\"content\":\"$blink\"}]}" ok.json 1
+          python3 -c "import json; d=json.load(open('ok.json')); assert d['ok'], d; assert d['hex'].startswith(':') and d['hex'].rstrip().endswith(':00000001FF'), d['hex'][:80]; print('flash', d['flash'], 'ram', d['ram'], 'durationMs', d['durationMs'])"
+          echo "Blink (again, cached):"; post "{\"board\":\"arduino-uno\",\"files\":[{\"path\":\"Blink.ino\",\"content\":\"$blink\"}]}" again.json 1
+          python3 -c "import json; d=json.load(open('again.json')); assert d['cached'] is True, d"
+          echo "Blink (changed, warm):"; post "{\"board\":\"arduino-uno\",\"files\":[{\"path\":\"Blink.ino\",\"content\":\"$blink// changed\\n\"}]}" warm.json 2
+          python3 -c "import json; d=json.load(open('warm.json')); assert d['ok'], d; print('durationMs', d['durationMs'])"
+          echo "Nano:"; post "{\"board\":\"arduino-nano\",\"files\":[{\"path\":\"Blink.ino\",\"content\":\"$blink\"}]}" nano.json 2
+          python3 -c "import json; d=json.load(open('nano.json')); assert d['ok'], d; print('durationMs', d['durationMs'])"
+          echo "A typo:"; post '{"board":"arduino-uno","files":[{"path":"Blink.ino","content":"void setup(){}\nvoid loop(){digitalWrit(13,HIGH);}\n"}]}' typo.json 3
+          python3 -c "import json; d=json.load(open('typo.json')); assert not d['ok'] and 'hex' not in d, d; assert 'digitalWrit' in d['log'], d['log']; print(d['log'].splitlines()[0][:160])"
+          echo "An include outside the sketch:"; code=$(curl -sS -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"files":[{"path":"Blink.ino","content":"#include \"/etc/passwd\"\nvoid setup(){}\nvoid loop(){}\n"}]}' localhost:8080/firmware/compile)
+          test "$code" = "422"
+      - name: Service log
+        if: always()
+        run: docker logs compile || true
