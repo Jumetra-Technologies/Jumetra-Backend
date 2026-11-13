@@ -10,6 +10,13 @@ sketch is code from a stranger:
 * every ``#include`` names a plain header (``<Servo.h>``, ``"motor.h"``):
   no absolute paths, no ``..``, no macro includes, no ``__has_include`` and
   no ``.incbin`` (which would read a server file into the program);
+* those rules are checked on the text as the preprocessor sees it, not only
+  line by line: lines joined by a backslash, comments, digraphs (``%:``) and
+  trigraphs (``??=``) are resolved first, so ``# /**/ include``, ``#in\``
+  + ``clude`` and ``%:include`` are directives too (audit N-1, 13 Nov 2026);
+* inline assembly takes plain string literals, with no assembler directives
+  (``.incbin``, ``.include``): ``".inc" "bin"`` is one string to the compiler;
+* no ``##`` token pasting, which could build any of the above from parts;
 * a time limit on the compiler.
 
 The service still runs the compiler in a container with no secrets (see
@@ -113,6 +120,115 @@ def check_sketch(board: str, files: list[dict[str, Any]]) -> list[tuple[str, str
     return out
 
 
+_TRIGRAPHS = {"??=": "#", "??/": "\\", "??(": "[", "??)": "]", "??<": "{", "??>": "}", "??!": "|", "??'": "^", "??-": "~"}
+_DIRECTIVE = re.compile(r"^[ \t]*#[ \t]*([A-Za-z_]\w*)?(.*)$")
+_HEADER = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_./-]*")
+_ASM = re.compile(r"\b(asm|__asm|__asm__)\b")
+_ASM_QUALIFIERS = re.compile(r"(\s|\bvolatile\b|\b__volatile__\b|\b__volatile\b|\binline\b|\bgoto\b)*")
+_STRING_TOKEN = re.compile(r'\s*(?:u8|u|U|L)?"@(\d+)"')
+_ASM_DIRECTIVE = re.compile(r"(^|[\n;])\s*\.[A-Za-z]")
+
+
+def _as_preprocessed(text: str) -> tuple[str, list[str]]:
+    """The text as the compiler's first phases leave it: (code, string literals).
+
+    Trigraphs replaced, backslash-newlines joined, comments turned into a space, and every
+    string literal replaced by ``"@N"`` with its contents in the list. Digraphs are replaced in
+    the code (outside strings). Character literals are kept as they are.
+    """
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    for tri, rep in _TRIGRAPHS.items():
+        text = text.replace(tri, rep)
+    text = re.sub(r"\\[ \t]*\n", "", text)
+    code: list[str] = []
+    strings: list[str] = []
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if text.startswith("//", i):
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+            code.append(" ")
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            i = n if j < 0 else j + 2
+            code.append(" ")
+        elif c == "R" and text.startswith('R"', i):
+            m = re.match(r'R"([^()\\\s]{0,16})\(', text[i:])
+            if not m:
+                code.append(c)
+                i += 1
+                continue
+            end = text.find(")" + m.group(1) + '"', i + m.end())
+            stop = n if end < 0 else end
+            strings.append(text[i + m.end():stop])
+            code.append(f'"@{len(strings) - 1}"')
+            i = n if end < 0 else end + len(m.group(1)) + 2
+        elif c == '"' or c == "'":
+            j = i + 1
+            while j < n and text[j] != c and text[j] != "\n":
+                j += 2 if text[j] == "\\" else 1
+            if c == '"':
+                strings.append(text[i + 1:j])
+                code.append(f'"@{len(strings) - 1}"')
+            else:
+                code.append(text[i:j + 1])
+            i = j + 1
+        else:
+            code.append(c)
+            i += 1
+    joined = "".join(code).replace("%:%:", "##").replace("%:", "#")
+    return joined, strings
+
+
+def _check_preprocessed(name: str, text: str) -> None:
+    code, strings = _as_preprocessed(text)
+    if "##" in code:
+        raise SketchRefused(f"{name} pastes tokens together with ##, which Kiungo's online build doesn't allow.")
+    for match in ("__has_include", "__has_embed", "_Pragma"):
+        if match in code:
+            raise SketchRefused(f"{name} uses {match}, which Kiungo's online build doesn't allow.")
+    for number, line in enumerate(code.split("\n"), start=1):
+        directive = _DIRECTIVE.match(line)
+        if not directive:
+            continue
+        word, rest = directive.group(1) or "", directive.group(2).strip()
+        if word in ("include_next", "import", "embed"):
+            raise SketchRefused(f"{name} uses #{word}, which Kiungo's online build doesn't allow.")
+        if word != "include":
+            continue
+        header = None
+        if rest.startswith("<") and rest.endswith(">"):
+            header = rest[1:-1]
+        else:
+            quoted = re.fullmatch(r'"@(\d+)"', rest)
+            if quoted:
+                header = strings[int(quoted.group(1))]
+        if header is None or not _HEADER.fullmatch(header) or ".." in header:
+            raise SketchRefused(
+                f"{name} line {number}: #include a library or a file of this sketch by name, "
+                "like #include <Servo.h> or #include \"motor.h\"."
+            )
+    for found in _ASM.finditer(code):
+        at = _ASM_QUALIFIERS.match(code, found.end()).end()
+        if at >= len(code) or code[at] != "(":
+            raise SketchRefused(f"{name}: {found.group(1)} is only allowed as {found.group(1)}(\"...\") with plain text in the quotes.")
+        at += 1
+        template = []
+        while True:
+            literal = _STRING_TOKEN.match(code, at)
+            if not literal:
+                break
+            template.append(strings[int(literal.group(1))])
+            at = literal.end()
+        rest = code[at:].lstrip()
+        if not template or not rest or rest[0] not in ":)":
+            raise SketchRefused(f"{name}: {found.group(1)}(...) takes its instructions as plain text in quotes here, not built from macros.")
+        body = "".join(template).replace("\\n", "\n").replace("\\t", "\t")
+        if _ASM_DIRECTIVE.search(body):
+            raise SketchRefused(f"{name}: inline assembly can't use assembler directives (lines starting with a dot) in Kiungo's online build.")
+
+
 def _check_text(name: str, text: str) -> None:
     if _FORBIDDEN.search(text):
         found = _FORBIDDEN.search(text).group(0)  # type: ignore[union-attr]
@@ -128,6 +244,7 @@ def _check_text(name: str, text: str) -> None:
                 f"{name} line {number}: #include a library or a file of this sketch by name, "
                 "like #include <Servo.h> or #include \"motor.h\"."
             )
+    _check_preprocessed(name, text)
 
 
 def cache_key(board: str, files: list[tuple[str, str]]) -> str:

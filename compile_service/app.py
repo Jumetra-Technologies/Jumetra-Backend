@@ -43,7 +43,8 @@ def _int_env(name: str, default: int) -> int:
 
 class FileIn(BaseModel):
     path: str = Field(max_length=80)
-    content: str
+    # Refused while the request is read, before the whole sketch is checked (MAX_TOTAL_BYTES).
+    content: str = Field(max_length=256 * 1024)
 
 
 class CompileIn(BaseModel):
@@ -99,7 +100,19 @@ class Slots:
 
 
 def _client(request: Request) -> str:
-    # Render puts the caller first in X-Forwarded-For.
+    """The caller's address, for the rate limit.
+
+    ``COMPILE_CLIENT_IP_HEADER`` names a header the host sets itself and callers can't (for
+    example ``cf-connecting-ip`` or ``true-client-ip``), when there is one. Otherwise the first
+    X-Forwarded-For entry, which Render says it sets to the caller. Whether Render also keeps a
+    value the caller sent there is unverified (audit N-3): if it does, a caller could change
+    address on every request and the limit wouldn't hold, so set the header when you can.
+    """
+    trusted = os.environ.get("COMPILE_CLIENT_IP_HEADER", "").strip().lower()
+    if trusted:
+        value = request.headers.get(trusted, "").split(",")[0].strip()
+        if value:
+            return value
     forwarded = request.headers.get("x-forwarded-for", "")
     return forwarded.split(",")[0].strip() or (request.client.host if request.client else "unknown")
 

@@ -184,3 +184,73 @@ def test_the_hourly_limit_also_holds():
 
 def test_health(client):
     assert client.get("/health").json()["ok"] is True
+
+
+# ----- the same rules as the preprocessor sees the text (audit N-1, 13 Nov 2026) -----
+
+SECRET = "/proc/1/environ"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        f'# /**/ include "{SECRET}"\n',  # a comment between # and include
+        f'#in\\\nclude "{SECRET}"\n',  # include split across lines
+        f'#include \\\n"{SECRET}"\n',  # the header on the next line
+        f'%:include "{SECRET}"\n',  # digraph for #
+        f'??=include "{SECRET}"\n',  # trigraph for #
+        f'#include /* x */ "{SECRET}"\n',
+        f'asm(".inc" "bin \\"{SECRET}\\"");\n',  # string pasting
+        f'__asm__ __volatile__ (".include \\"{SECRET}\\"");\n',  # the assembler's own include
+        '#define S(x) #x\nasm(".inc" S(bin) " \\"/etc/passwd\\"");\n',  # template built by a macro
+        '#define A asm\nA(".incbin \\"/etc/passwd\\"");\n',  # asm by another name
+        "#define CAT(a, b) a##b\n",  # token pasting
+        '#define CAT(a, b) a%:%:b\n',
+        "#if __has_embed(<x>)\n#endif\n",
+        '_Pragma("once")\n',
+        f'#embed "{SECRET}"\n',
+        f'#import "{SECRET}"\n',
+    ],
+)
+def test_preprocessor_spellings_of_forbidden_things_are_refused(text):
+    with pytest.raises(SketchRefused):
+        check_sketch("arduino-uno", files(Blink__ino=text + BLINK))
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "#define PINS(x) \\\n  pinMode(x, OUTPUT); \\\n  digitalWrite(x, LOW)\n",  # multi-line macros still work
+        '# include <Servo.h>\n',
+        '#include <Servo.h> /* the servo library */\n',
+        '// #include "/etc/passwd" is only a comment\n',
+        '/* asm(".word 1") in a comment */\n',
+        'const char *msg = "use # and ## and asm(\\".x\\") freely in text";\n',
+        'const char *raw = R"(// not a comment, "quotes" too)";\n',
+        'void tick() { asm("nop"); __asm__ __volatile__ ("cli" ::: "memory"); asm volatile("sei\\n\\t"); }\n',
+        "char c = '#'; char q = '\"';\n",
+        '#define LED 13\n#ifdef LED\n#endif\n',
+    ],
+)
+def test_ordinary_sketches_still_pass(text):
+    assert check_sketch("arduino-uno", files(Blink__ino=text + BLINK))
+
+
+def test_a_trusted_client_header_keys_the_limit(monkeypatch):
+    from compile_service.app import _client
+
+    class Req:
+        def __init__(self, headers):
+            self.headers = headers
+            self.client = None
+
+    monkeypatch.setenv("COMPILE_CLIENT_IP_HEADER", "CF-Connecting-IP")
+    assert _client(Req({"cf-connecting-ip": "203.0.113.9", "x-forwarded-for": "1.2.3.4"})) == "203.0.113.9"
+    assert _client(Req({"x-forwarded-for": "1.2.3.4, 10.0.0.1"})) == "1.2.3.4"
+    monkeypatch.delenv("COMPILE_CLIENT_IP_HEADER")
+    assert _client(Req({"cf-connecting-ip": "203.0.113.9", "x-forwarded-for": "1.2.3.4"})) == "1.2.3.4"
+
+
+def test_an_oversized_file_is_refused_while_reading(client):
+    big = [{"path": "Blink.ino", "content": "x" * (256 * 1024 + 1)}]
+    assert client.post("/firmware/compile", json={"board": "arduino-uno", "files": big}, headers={"Origin": ORIGIN}).status_code == 422
