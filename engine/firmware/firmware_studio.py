@@ -133,19 +133,30 @@ class FirmwareStudioService:
 
     # ---- Projects ---------------------------------------------------------
 
-    def list_projects(self) -> dict[str, Any]:
-        items = [p.to_dict() for p in self.repo.list_projects()]
+    @staticmethod
+    def _owned(project: Any, owner_id: Optional[str]) -> bool:
+        """Whether this person may see the project. owner_id None means "anyone" (internal calls)."""
+        return owner_id is None or project.metadata.get("owner_id") == owner_id
+
+    def check_owner(self, project_id: str, owner_id: Optional[str]) -> None:
+        """KeyError (a 404) unless the project exists and belongs to owner_id."""
+        p = self.repo.get(project_id)
+        if p is None or not self._owned(p, owner_id):
+            raise KeyError(f"project not found: {project_id}")
+
+    def list_projects(self, owner_id: Optional[str] = None) -> dict[str, Any]:
+        items = [p.to_dict() for p in self.repo.list_projects() if self._owned(p, owner_id)]
         return {"projects": items, "count": len(items)}
 
-    def get_project(self, project_id: str) -> dict[str, Any]:
+    def get_project(self, project_id: str, owner_id: Optional[str] = None) -> dict[str, Any]:
         p = self.repo.get(project_id)
-        if p is None:
+        if p is None or not self._owned(p, owner_id):
             raise KeyError(f"project not found: {project_id}")
         data = p.to_dict()
         data["tree"] = self.project_tree(p)
         return data
 
-    def create_project(self, body: dict[str, Any]) -> dict[str, Any]:
+    def create_project(self, body: dict[str, Any], owner_id: Optional[str] = None) -> dict[str, Any]:
         name = str(body.get("name") or "Untitled Firmware")
         project_type = str(body.get("project_type") or ProjectType.ARDUINO_SKETCH.value)
         board_type = str(body.get("board_type") or "esp32")
@@ -160,6 +171,9 @@ class FirmwareStudioService:
             files=files,
             template_id=template_id,
         )
+        if owner_id is not None:
+            project.metadata["owner_id"] = owner_id
+            project = self.repo.save(project)
         return project.to_dict()
 
     def save_file(self, project_id: str, path: str, content: str) -> dict[str, Any]:

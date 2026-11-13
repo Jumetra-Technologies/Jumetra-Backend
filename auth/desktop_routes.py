@@ -38,7 +38,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from api.db.models import User
 from database.models import AccessToken, DesktopAuthCode, Device, RefreshToken
-from database.service import hash_token, user_payload
+from database.service import RefreshSpent, hash_token, spend_refresh, user_payload
 
 from .routes import current_user_id
 from .tokens import ACCESS_TTL, REFRESH_TTL, issue_access, issue_refresh
@@ -247,7 +247,15 @@ def refresh_desktop(body: RefreshRequest, request: Request) -> dict[str, Any]:
         user = session.get(User, row.user_id)
         if user is None:
             raise HTTPException(status_code=401, detail="Sign in again.")
-        row.revoked = True
+        try:
+            spend_refresh(session, row)
+        except RefreshSpent:
+            # Spent by another request between our read and now: the same replay as above.
+            device = session.get(Device, device.id)
+            if device is not None:
+                _revoke_device(session, device)
+                session.commit()
+            raise HTTPException(status_code=401, detail="This sign-in was used somewhere else, so it has been ended. Sign in again.") from None
         return _issue_device_tokens(request, session, user, device)
 
 
