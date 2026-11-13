@@ -3340,7 +3340,22 @@
     },
     "/auth/logout": {
       "post": {
+        "description": "End this session: the presented access and refresh tokens. ``?everywhere=true`` ends them all.\n\nA request that relies on the browser's cookies (no bearer token) must come from one of\nKiungo's websites, so another site can't sign people out (CSRF).",
         "operationId": "logout_auth_logout_post",
+        "parameters": [
+          {
+            "description": "End every session of the account, on every device.",
+            "in": "query",
+            "name": "everywhere",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "End every session of the account, on every device.",
+              "title": "Everywhere",
+              "type": "boolean"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
