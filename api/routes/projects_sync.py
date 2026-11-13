@@ -28,7 +28,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 
 from auth.routes import current_user_id
 from database.models import FileBlob, ProjectRevision, SyncedFile, SyncedProject
@@ -41,6 +41,10 @@ MAX_FILES = 300
 QUOTA = 200 * 1024 * 1024
 KEEP_REVISIONS = 20
 DELETED_KEPT = timedelta(days=30)
+# A blob nothing references yet is kept this long: it may be one a device uploaded (or was told
+# it already has) a moment ago and is about to commit. Listing projects used to delete it,
+# so the commit failed with 422 (audit API-008).
+BLOB_GRACE = timedelta(hours=1)
 
 PROJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -157,14 +161,21 @@ def _purge_deleted(session, owner_id: str) -> None:
 
 
 def _collect_blobs(session, owner_id: str) -> None:
-    """Drop blobs that no current file and no kept revision uses."""
+    """Drop blobs that no current file and no kept revision uses, once they're older than BLOB_GRACE."""
     used = set(session.execute(select(SyncedFile.sha256).where(SyncedFile.owner_id == owner_id)).scalars().all())
     for files in session.execute(select(ProjectRevision.files).where(ProjectRevision.owner_id == owner_id)).scalars().all():
         used.update(f["sha256"] for f in files)
-    stored = session.execute(select(FileBlob.sha256).where(FileBlob.owner_id == owner_id)).scalars().all()
-    unused = [h for h in stored if h not in used]
+    cutoff = _utcnow() - BLOB_GRACE
+    stored = session.execute(select(FileBlob.sha256, FileBlob.created_at).where(FileBlob.owner_id == owner_id)).all()
+    unused = [h for h, created in stored if h not in used and (created is None or _aware(created) < cutoff)]
     if unused:
         session.execute(delete(FileBlob).where(FileBlob.owner_id == owner_id, FileBlob.sha256.in_(unused)))
+
+
+def _keep_fresh(session, owner_id: str, hashes: set[str]) -> None:
+    """A device was just told the server has these blobs: keep them through the grace period."""
+    if hashes:
+        session.execute(update(FileBlob).where(FileBlob.owner_id == owner_id, FileBlob.sha256.in_(sorted(hashes))).values(created_at=_utcnow()))
 
 
 def _project(session, owner_id: str, project_id: str) -> Optional[SyncedProject]:
@@ -213,6 +224,8 @@ def missing_blobs(project_id: str, body: HashesIn, request: Request, user_id: st
     wanted = {h for h in body.hashes if SHA256.match(h)}
     with request.app.state.db_factory() as session:
         have = set(session.execute(select(FileBlob.sha256).where(FileBlob.owner_id == user_id, FileBlob.sha256.in_(wanted))).scalars().all()) if wanted else set()
+        _keep_fresh(session, user_id, have)
+        session.commit()
         return {"missing": sorted(wanted - have)}
 
 
@@ -240,6 +253,7 @@ def upload_blobs(project_id: str, body: list[BlobIn], request: Request, user_id:
         if stored + sum(len(c) for c in new.values()) > QUOTA + MAX_PROJECT:
             raise HTTPException(status_code=413, detail="Your account's sync space is full. Delete projects you no longer need from it.")
         session.add_all(FileBlob(owner_id=user_id, sha256=h, content=c, size_bytes=len(c)) for h, c in new.items())
+        _keep_fresh(session, user_id, have)
         session.commit()
         return {"stored": sorted(new), "existing": sorted(have)}
 

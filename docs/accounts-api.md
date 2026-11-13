@@ -28,7 +28,7 @@ profile.
 | --- | --- | --- |
 | `GET /auth/me` | bearer | The user: `id`, `email`, `email_verified`, `display_name`, `picture_url`, `auth_provider`, `linked_providers`, `role`, `role_other`, `profile_complete`, `platform_role`, `organization`, `location`, `bio`. |
 | `PATCH /auth/me` | any subset of `display_name`, `role`, `role_other`, `organization`, `location`, `bio` | The full user. `422` on validation errors. `email` and `picture_url` aren't editable. |
-| `DELETE /auth/me` | bearer | `204`. The account and everything under it are gone; its tokens stop working. |
+| `DELETE /auth/me` | bearer | `204`. The account and everything under it are gone: projects and records, lab sessions, synced desktop projects with their files, revisions and blobs, devices, consents, crash reports sent signed in, and usage counts. Its tokens stop working and both sign-in cookies are cleared. |
 | `GET /auth/users/search?q=` | bearer | Up to 10 people who have signed in, whose name or email starts with `q` (2+ characters): `{ id, display_name, email }`. |
 
 `role` is what the person says they are (`student`, `researcher`,

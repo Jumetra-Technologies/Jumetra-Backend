@@ -7,7 +7,7 @@ Changes from the draft, found while building it:
 - **Blobs are per owner** (`file_blobs` is keyed on owner and hash), not shared. With shared blobs, anyone who knew a file's hash could commit it into their own project and read it back. Storage is still shared between one person's projects and revisions.
 - **`POST /{id}/blobs/missing`** takes `{ hashes }` and returns the ones the server doesn't have, so a push uploads only what's new.
 - **`world.json` syncs** too (the robot world, sprint 8). Paths are checked against a fixed pattern: `kiungo.json`, `circuit.json`, `world.json`, `sketch/<file>`, `records/<file>` or `records/<folder>/<file>`.
-- **Old content is collected:** after each commit, blobs that no current file and no kept revision use are deleted. Deleted projects are purged 30 days after deletion, the next time the list is read.
+- **Old content is collected:** after each commit and when the list is read, blobs that no current file and no kept revision use are deleted once they're over an hour old. The hour covers a device that uploaded a file, or was told the server already has it (`blobs/missing`, which restarts that hour), and hasn't committed yet. Deleted projects are purged 30 days after deletion, the next time the list is read.
 
 ## What it's for
 
