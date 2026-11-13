@@ -151,7 +151,12 @@ def test_limits_per_file_per_project_and_per_account(ada, monkeypatch):
     assert push(ada, "prj-b", {"kiungo.json": "b" * 30}, "*").status_code == 413
 
 
-def test_old_revisions_are_kept_twenty_deep_and_unused_blobs_go(app, ada):
+def test_old_revisions_are_kept_twenty_deep_and_unused_blobs_go(app, ada, monkeypatch):
+    from datetime import timedelta
+
+    from api.routes import projects_sync
+
+    monkeypatch.setattr(projects_sync, "BLOB_GRACE", timedelta(0))  # this test is about revisions, not the upload grace
     push(ada, "prj-rover", FILES, "*")
     for i in range(1, 25):
         assert push(ada, "prj-rover", {**FILES, "sketch/sketch.ino": f"// v{i}\n"}, f'"r{i}"').status_code == 200
@@ -188,3 +193,53 @@ def test_signed_out_is_refused(app):
     with TestClient(app) as c:
         assert c.get(BASE).status_code == 401
         assert c.put(f"{BASE}/prj-x", json={"files": []}, headers={"If-Match": "*"}).status_code in (401, 403)
+
+
+def test_an_upload_waiting_for_its_commit_survives_a_listing(app, ada, bob):
+    """API-008: listing used to delete blobs no commit used yet, so the commit that followed failed."""
+    files = {**FILES, "sketch/sketch.ino": "// uploaded, not yet committed\n"}
+    blobs = [blob(t) for t in files.values()]
+    assert ada.post(f"{BASE}/prj-rover/blobs", json=blobs).status_code == 200
+    # Another device (or this one) lists projects in between, and so does someone else.
+    assert ada.get(BASE).status_code == 200
+    assert bob.get(BASE).status_code == 200
+    body = {"name": "Rover", "board": "arduino-uno", "device": "LAPTOP", "files": [{"path": p, "sha256": b["sha256"]} for p, b in zip(files, blobs)]}
+    assert ada.put(f"{BASE}/prj-rover", json=body, headers={"If-Match": "*"}).status_code == 200
+
+
+def test_a_blob_the_server_said_it_has_is_kept_for_the_commit(app, ada, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import update
+
+    from database.models import FileBlob
+
+    text = "// already on the server, unused\n"
+    sha = blob(text)["sha256"]
+    assert ada.post(f"{BASE}/prj-rover/blobs", json=[blob(text)]).status_code == 200
+    with app.state.db_factory() as session:  # uploaded long ago and never committed
+        session.execute(update(FileBlob).values(created_at=datetime.now(timezone.utc) - timedelta(days=2)))
+        session.commit()
+    # The device asks what's missing: the server says it has it, and must keep it until the commit.
+    assert ada.post(f"{BASE}/prj-rover/blobs/missing", json={"hashes": [sha]}).json() == {"missing": []}
+    assert ada.get(BASE).status_code == 200
+    # The commit names it without uploading it again, as the desktop app does.
+    body = {"name": "Rover", "board": "arduino-uno", "device": "LAPTOP", "files": [{"path": "sketch/sketch.ino", "sha256": sha}]}
+    assert ada.put(f"{BASE}/prj-rover", json=body, headers={"If-Match": "*"}).status_code == 200
+
+
+def test_unused_blobs_still_go_after_the_grace_period(app, ada):
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import select, update
+
+    from database.models import FileBlob
+
+    stray = blob("// never committed\n")
+    assert ada.post(f"{BASE}/prj-rover/blobs", json=[stray]).status_code == 200
+    with app.state.db_factory() as session:
+        session.execute(update(FileBlob).values(created_at=datetime.now(timezone.utc) - timedelta(hours=2)))
+        session.commit()
+    assert ada.get(BASE).status_code == 200
+    with app.state.db_factory() as session:
+        assert session.scalar(select(FileBlob).where(FileBlob.sha256 == stray["sha256"])) is None

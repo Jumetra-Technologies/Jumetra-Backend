@@ -405,7 +405,11 @@ def delete_me(request: Request, response: Response, user_id: str = Depends(curre
             delete_user(session, user)
             session.commit()
     clear_auth_cookies(response)
-    return Response(status_code=204, headers=dict(response.headers))
+    # Copy every header line: a dict of the headers kept only one of the two Set-Cookie lines,
+    # so the refresh cookie survived the deletion (audit API-024).
+    done = Response(status_code=204)
+    done.raw_headers.extend((k, v) for k, v in response.raw_headers if k.lower() == b"set-cookie")
+    return done
 
 
 @router.get("/users/search")
