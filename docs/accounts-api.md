@@ -12,15 +12,16 @@ request and response shapes are the ones `lib/api-client.ts`,
 | `POST /auth/google` | `{ id_token }` (Firebase ID token) | A session: `access_token`, `refresh_token`, `token_type`, and the user (both flattened and under `user`). |
 | `POST /auth/github` | `{ id_token }` | Same. The token must have signed in with `github.com`. |
 | `POST /auth/link-provider` | `{ id_token, provider }` + bearer | Attaches the provider to the signed-in account. `409` if the provider identity belongs to another account or the Firebase UID differs. |
-| `POST /auth/refresh` | `{ refresh_token }`, `X-Refresh-Token` or the cookie | A new session. The old refresh token stops working. |
-| `POST /auth/logout` | bearer or refresh token | Revokes every session of the account. |
+| `POST /auth/refresh` | `{ refresh_token }`, `X-Refresh-Token` or the cookie | A new session. The old refresh token stops working, and only one request can use it: a second request with the same token gets `401`. Desktop refresh tokens are refused here (`401`); they rotate through `/auth/desktop/refresh`. |
+| `POST /auth/logout` | bearer, refresh token or the cookies | Ends this session: the access and refresh tokens sent. `?everywhere=true` ends every session of the account, desktop included. Without a bearer token the request must come from one of Kiungo's websites (`403` otherwise). |
 | `POST /auth/ws-ticket` | bearer | `{ ticket, expires_in: 30 }` for a WebSocket. |
 
 Account continuity, in order: the provider identity, the Firebase UID, then a
-verified email. An unverified email never merges into an existing account; a
-sign-in whose unverified email is already taken answers `409` and tells the
-person to sign in the way they did before and connect the provider from their
-profile.
+verified email. An unverified email never merges into an existing account, and
+a verified email never merges into an account whose own email was never
+verified (it may have been made by someone who doesn't own the address). Either
+way the sign-in answers `409` and tells the person to sign in the way they did
+before and connect the provider from their profile.
 
 ## The person
 
@@ -28,8 +29,8 @@ profile.
 | --- | --- | --- |
 | `GET /auth/me` | bearer | The user: `id`, `email`, `email_verified`, `display_name`, `picture_url`, `auth_provider`, `linked_providers`, `role`, `role_other`, `profile_complete`, `platform_role`, `organization`, `location`, `bio`. |
 | `PATCH /auth/me` | any subset of `display_name`, `role`, `role_other`, `organization`, `location`, `bio` | The full user. `422` on validation errors. `email` and `picture_url` aren't editable. |
-| `DELETE /auth/me` | bearer | `204`. The account and everything under it are gone: projects and records, lab sessions, synced desktop projects with their files, revisions and blobs, devices, consents, crash reports sent signed in, and usage counts. Its tokens stop working and both sign-in cookies are cleared. |
-| `GET /auth/users/search?q=` | bearer | Up to 10 people who have signed in, whose name or email starts with `q` (2+ characters): `{ id, display_name, email }`. |
+| `DELETE /auth/me` | bearer | `204`. The account and everything under it are gone; its tokens stop working. |
+| `GET /auth/users/search?q=` | bearer | Up to 10 people who have signed in, whose name or email starts with `q` (2+ characters; `%` and `_` match themselves): `{ id, display_name, email }`. |
 
 `role` is what the person says they are (`student`, `researcher`,
 `technician`, `instructor`, `club_lead`, `school_admin`, `hobbyist`, `other`).
@@ -63,3 +64,15 @@ A project: `id`, `owner_id`, `name`, `description`, `objectives`,
 The server starts without Firebase credentials. Sign-in routes answer `503`
 until `FIREBASE_CREDENTIALS` (or `credentials/firebase-adminsdk.json`) is in
 place; everything else works, and the tests replace the token verifier.
+
+## Which websites may call the API with the visitor's cookies
+
+CORS with credentials, and the origin check on cookie writes, trust:
+
+- the exact origins in `HHIP_CORS_ORIGINS` (or the built-in list in `api/main.py`);
+- `http(s)://localhost` and `127.0.0.1` on any port, for development;
+- `192.168.x.x` addresses only with `HHIP_ALLOW_LAN_ORIGINS=1`.
+
+Hosting domains anyone can publish on (`*.web.app`, `*.firebaseapp.com`,
+`*.hosted.app`, `*.run.app`) aren't trusted by pattern. `X-Forwarded-Origin`
+is ignored: only the browser's own `Origin` header counts.
